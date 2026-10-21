@@ -1,10 +1,21 @@
 using System;
 using System.Drawing;
+using System.Reflection;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
+
+// File properties (Details tab / Explorer tooltip). Without these the exe shows as a blank
+// "Apex" with no version, which looks unfinished next to everything else.
+[assembly: AssemblyTitle("Apex Lite")]
+[assembly: AssemblyProduct("Apex Lite")]
+[assembly: AssemblyDescription("ACC 儀表 HUD：單圈、四輪胎況、賽段與加油、啟動片頭")]
+[assembly: AssemblyCompany("Apex")]
+[assembly: AssemblyCopyright("Apex Licence 2.0")]
+[assembly: AssemblyVersion("2.0.1.0")]
+[assembly: AssemblyFileVersion("2.0.1.0")]
 
 namespace ApexLite
 {

@@ -505,6 +505,7 @@ def patch_names(dst):
 
 CSC = r'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 HOST_SRC = os.path.join(HERE, 'apex_lite_host.cs')
+HOST_ICO = os.path.join(HERE, 'apex_lite.ico')
 
 
 def build_host(dst):
@@ -520,7 +521,7 @@ def build_host(dst):
         return
     exe = os.path.join(dst, 'Apex.exe')
     args = [CSC, '/nologo', '/target:winexe', '/platform:anycpu', '/optimize+',
-            '/out:' + exe,
+            '/out:' + exe, '/win32icon:' + HOST_ICO,
             '/r:System.dll', '/r:System.Drawing.dll', '/r:System.Windows.Forms.dll',
             '/r:' + os.path.join(dst, 'Microsoft.Web.WebView2.Core.dll'),
             '/r:' + os.path.join(dst, 'Microsoft.Web.WebView2.WinForms.dll'),
@@ -530,6 +531,7 @@ def build_host(dst):
         print('host build failed:')
         print((r.stdout or '')[-1200:])
     else:
+        shutil.copy2(HOST_ICO, os.path.join(dst, 'apex.ico'))
         print('host built: %.1f KB' % (os.path.getsize(exe) / 1024.0))
 
 
