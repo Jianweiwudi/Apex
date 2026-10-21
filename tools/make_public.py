@@ -118,6 +118,9 @@ html.lite #restore{display:none!important}
 /* the switcher only ever had AC-specific cards behind it, and the Lite host does not
    implement the game command at all */
 html.lite #segGame,html.lite .sideLbl{display:none!important}
+/* the permanent offline banner belongs to the memory-writing build; the legal text is still
+   reachable from Settings -> About */
+html.lite .warnStrip{display:none!important}
 html.lite .topbar{gap:10px}
 /* two cards per row, same height, note pinned to the bottom */
 html.lite .lapCard,html.lite .tyreCard{display:flex;flex-direction:column}
@@ -419,17 +422,48 @@ def patch_banner(dst):
         src = src.replace(old, new)
     src = src.replace("The backend writes ACC's loaded realism damageRate directly in process memory. This is",
                       "This edition has no damage assist: nothing in it writes into the game. This")
-    # the overlay row described the data source as "read-only shared memory"; keep the fact,
-    # drop the label
-    src = src.replace('唯讀遊戲共享記憶體', '只讀取遊戲共享記憶體')
-    src = src.replace('只读游戏共享内存', '只读取游戏共享内存')
+    src = src.replace('\u552f\u8b80\u904a\u6232\u5171\u4eab\u8a18\u61b6\u9ad4', '\u53ea\u8b80\u53d6\u904a\u6232\u5171\u4eab\u8a18\u61b6\u9ad4')
+    src = src.replace('\u53ea\u8bfb\u6e38\u620f\u5171\u4eab\u5185\u5b58', '\u53ea\u8bfb\u53d6\u6e38\u620f\u5171\u4eab\u5185\u5b58')
+    # The lite host implements no status message at all, so the pill stayed on "scanning memory"
+    # forever and the car/track row stayed empty even with the game running. The overlay's state
+    # is the live source in this edition.
+    _OLD = '    var state = "booting", tone = "idle", text = t("st.scan");'
+    _NEW = (_OLD
+            + chr(10) + '    /* Apex Lite: no host status exists, so every render derives the pill from the'
+            + chr(10) + '       overlay state instead of waiting for a message that never arrives. */'
+            + chr(10) + '    if (typeof OV !== "undefined" && OV){'
+            + chr(10) + '      gotStatus = true;'
+            + chr(10) + '      st.connected = !!(OV.state && OV.state.hasGame);'
+            + chr(10) + '      st.state = st.connected ? "live" : "idle";'
+            + chr(10) + '      if (OV.state){'
+            + chr(10) + '        if (OV.state.car) st.car = OV.state.car;'
+            + chr(10) + '        if (OV.state.track) st.track = OV.state.track;'
+            + chr(10) + '      }'
+            + chr(10) + '      setTimeout(render, 2500);'
+            + chr(10) + '    }')
+    src = src.replace(_OLD, _NEW)
     open(p, 'w', encoding='utf-8').write(src)
 
 
-# Everything the two editions store or register by name must differ, otherwise the full and the
-# lite build share one state folder, one mutex and one scheduled task: the second one to start
-# would exit, and both would read each other's records.
-LITE_NAME = 'Apex Lite'
+
+# The two editions must never share a port: the panel talks to whatever answers on 7798, so a
+# running full backend makes the lite panel show its memory scanner and wait for it.
+LITE_PORT = '7808'
+
+
+def patch_port(dst):
+    files = ['ui/index.html', 'ApexGrip-Stop.cmd', 'ApexLauncher.ps1', 'SETUP.txt', 'README.md',
+             'tools/apex_doctor.ps1', 'tools/grip_watchdog.ps1', 'grip/apex_grip_server.py']
+    for rel in files:
+        p = os.path.join(dst, rel.replace('/', os.sep))
+        if not os.path.isfile(p):
+            continue
+        t = open(p, encoding='utf-8', errors='replace').read()
+        t = t.replace('127.0.0.1:7798', '127.0.0.1:' + LITE_PORT)
+        t = t.replace("PORT = 7798", "PORT = int(%s)" % LITE_PORT)
+        t = t.replace('-Port 7798', '-Port ' + LITE_PORT)
+        t = t.replace(':7798', ':' + LITE_PORT)
+        open(p, 'w', encoding='utf-8').write(t)
 
 
 def patch_names(dst):
@@ -570,6 +604,7 @@ def main():
     patch_banner(dst)
     patch_docs(dst)
     patch_names(dst)
+    patch_port(dst)
     build_host(dst)
     r = subprocess.run([sys.executable, '-m', 'py_compile',
                         os.path.join(dst, 'grip', 'apex_grip_server.py')],
