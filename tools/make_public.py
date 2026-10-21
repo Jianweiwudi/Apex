@@ -73,6 +73,9 @@ STUB = '''class Grip:
         self.damage_on = bool(on)
         return False
 
+    def restore_damage(self):
+        return False
+
     def damage_status(self):
         return {'on': False, 'found': False, 'applied': False, 'refused': True}
 
@@ -112,6 +115,9 @@ html.lite .grp:has(#setSafeH){display:none!important}
 html.lite .actCol{display:none!important}
 /* "restore stock" only existed to put the grip curves back */
 html.lite #restore{display:none!important}
+/* the switcher only ever had AC-specific cards behind it, and the Lite host does not
+   implement the game command at all */
+html.lite #segGame,html.lite .sideLbl{display:none!important}
 html.lite .topbar{gap:10px}
 /* two cards per row, same height, note pinned to the bottom */
 html.lite .lapCard,html.lite .tyreCard{display:flex;flex-direction:column}
@@ -126,7 +132,7 @@ LITE_LICENSE = """# Apex Lite — 使用授權條款
 
 Copyright (c) 2026 Apex contributors.
 
-**本版本為唯讀工具：不讀寫、不注入、不修改遊戲進程的任何記憶體。**
+**本版本不寫入、不注入、不修改遊戲進程的任何記憶體。**
 
 ## 一、授權範圍
 
@@ -197,7 +203,7 @@ LEGAL = {
         'version': '2.0',
         'title': '使用授權與免責聲明',
         'updated': '2026-10-22',
-        'intro': 'Apex Lite 是唯讀工具：不讀寫、不注入、不修改遊戲進程的任何記憶體，只透過遊戲公開的共享記憶體讀取儀表資料，並在本機讀寫設定與片頭檔案。使用前請閱讀以下全部條款。',
+        'intro': 'Apex Lite 只讀取遊戲公開的共享記憶體作為儀表資料，並在本機讀寫設定與片頭檔案；它不會寫入或修改遊戲。使用前請閱讀以下全部條款。',
         'sections': [
             {'title': '⚠ 僅限離線單機使用（請務必閱讀）',
              'body': '1. 本工具只讀取遊戲公開的共享記憶體（檔位、速度、油量、圈速、胎溫胎壓），不寫入任何遊戲狀態。\n2. 僅允許在單機 / 離線模式下使用。\n3. 嚴禁在任何線上多人對局、線上伺服器或連線模式中使用。\n4. 若無法接受上述任何一條，請立即停止使用並刪除本軟體。'},
@@ -217,7 +223,7 @@ LEGAL = {
         'version': '2.0',
         'title': '使用授权与免责声明',
         'updated': '2026-10-22',
-        'intro': 'Apex Lite 是只读工具：不读写、不注入、不修改游戏进程的任何内存，只通过游戏公开的共享内存读取仪表数据，并在本机读写设置与片头文件。使用前请阅读以下全部条款。',
+        'intro': 'Apex Lite 只读取游戏公开的共享内存作为仪表数据，并在本机读写设置与片头文件；它不会写入或修改游戏。使用前请阅读以下全部条款。',
         'sections': [
             {'title': '⚠ 仅限离线单机使用（请务必阅读）',
              'body': '1. 本工具只读取游戏公开的共享内存（档位、速度、油量、圈速、胎温胎压），不写入任何游戏状态。\n2. 仅允许在单机 / 离线模式下使用。\n3. 严禁在任何线上多人对局、线上服务器或连接模式中使用。\n4. 若无法接受上述任何一条，请立即停止使用并删除本软件。'},
@@ -237,7 +243,7 @@ LEGAL = {
         'version': '2.0',
         'title': 'Licence and disclaimer',
         'updated': '2026-10-22',
-        'intro': 'Apex Lite is read-only: it never reads, writes or injects into the game process. It reads the game published shared memory for telemetry and reads/writes local settings and movie files. Please read the terms below before using it.',
+        'intro': 'Apex Lite reads the game published shared memory for telemetry and keeps its settings and movie files on your machine; it does not write into or modify the game. Please read the terms below before using it.',
         'sections': [
             {'title': '⚠ Offline single-player only',
              'body': '1. The tool only reads the game published shared memory (gear, speed, fuel, lap times, tyre temperatures and pressures); it writes nothing into the game.\n2. Use it in single-player / offline mode only.\n3. Never use it in online multiplayer, on an online server, or in any connected session.\n4. If any of this is unacceptable, stop using it and delete the software.'},
@@ -291,7 +297,19 @@ def patch_server(dst):
             if not (ln.startswith('k32.') and ('ProcessMemory' in ln or 'OpenProcess' in ln
                                                or 'VirtualQueryEx' in ln))]
     src = chr(10).join(kept)
+    # dead weight from the removed scanner: the damage/curve signatures, the heap bounds it
+    # searched and the structures only it used. The kernel32 block between them stays, the
+    # shared-memory reads and the single-instance mutex still need it.
+    def cut(text, start, end):
+        i = text.find(start)
+        j = text.find(end, i + 1) if i >= 0 else -1
+        return text[:i] + text[j:] if (i >= 0 and j > i) else text
+
+    src = cut(src, '# Collision-immunity defers repair', "k32 = C.WinDLL('kernel32'")
+    src = cut(src, 'class MBI(C.Structure):', 'LOG_PATH = ')
     src = src.replace("    GRIP.target = GRIP.load_factor()\n", "    GRIP.target = 1.0\n")
+    src = src.replace("log('Apex 抓地力后端  http://127.0.0.1:%d  (记忆倍率 %.2fx)' % (PORT, GRIP.target))",
+                      "log('Apex Lite 后端  http://127.0.0.1:%d  (只读，不写游戏内存)' % PORT)")
     open(p, 'w', encoding='utf-8').write(src)
 
 
@@ -306,9 +324,9 @@ def patch_ui(dst):
 
 BANNER = {
     'disc.text': {
-        'zh-Hant': '僅供離線單機使用。本工具為唯讀，不會修改遊戲的任何狀態；請遵守你所使用之賽事平台自身的規則。',
-        'zh-Hans': '仅供离线单机使用。本工具为只读，不会修改游戏的任何状态；请遵守你所使用之赛事平台自身的规则。',
-        'en': 'Offline single-player only. The tool is read-only and changes nothing in the game; respect the rules of whatever platform you race on.',
+        'zh-Hant': '僅供離線單機使用。本工具不會修改遊戲的任何狀態；請遵守你所使用之賽事平台自身的規則。',
+        'zh-Hans': '仅供离线单机使用。本工具不会修改游戏的任何状态；请遵守你所使用之赛事平台自身的规则。',
+        'en': 'Offline single-player only. The tool changes nothing in the game; respect the rules of whatever platform you race on.',
     },
 }
 
@@ -316,9 +334,9 @@ BANNER = {
 
 LITE_README = """# Apex Lite
 
-**唯讀**的 Assetto Corsa Competizione 儀表工具：不讀寫、不注入、不修改遊戲進程的任何記憶體。
-它只讀取遊戲公開的共享記憶體（檔位、速度、油量、圈速、胎溫胎壓），加上 HUD 疊加層、賽段與加油計算，
-以及一支可替換成遊戲啟動片頭的影片工具。
+Assetto Corsa Competizione 的儀表工具：HUD 疊加層、圈速、四輪胎況、賽段與加油計算，
+再加上一支可替換成遊戲啟動片頭的影片工具。資料全部來自遊戲公開的共享記憶體（檔位、速度、油量、
+圈速、胎溫胎壓），設定與片頭檔案則保存在你自己的電腦上。
 
 介面是本機的 WebView2 面板（Apex.exe 只負責開視窗），實際工作由面板裡的 HTML/JS 與一個在
 127.0.0.1:7798 監聽的小型 Python 服務（grip/apex_grip_server.py，負責找 ACC 安裝路徑、管理片頭檔案、
@@ -339,10 +357,9 @@ LITE_README = """# Apex Lite
 | **片頭音量** | 0–200 %，可用滑桿或滾輪（每格 1 %）調整；只重寫音軌、畫面不動 |
 | **畫質選項** | 逐項開關：陰影、體積霧、螢幕空間反射、泛光、動態模糊、環境光遮蔽、抗鋸齒 |
 
-## 這個版本沒有什麼
+## 範圍
 
-本版本只讀取遊戲公開的共享記憶體。任何會寫入遊戲的功能都不包含在內：後端沒有掃描器、
-沒有寫入函式，連 Win32 記憶體 API 的原型都沒有。
+只做儀表與呈現：讀取共享記憶體、畫 HUD、算賽段與加油、處理片頭影片。不會寫入遊戲的任何狀態。
 
 ## 需求
 
@@ -365,7 +382,7 @@ LITE_README = """# Apex Lite
 **Apex Lite Licence 2.0**（正體中文與英文並列）。重點：
 
 - **僅限個人、非商業、離線單機使用**；請遵守你所使用之賽事平台自身的規則。
-- 本工具為**唯讀**：不讀寫遊戲進程記憶體、不注入、不修改遊戲狀態。
+- 不會寫入遊戲記憶體、不注入、不修改遊戲狀態。
 - 不連網、不收集、不上傳任何資料；設定與日誌只留在本機。
 
 第三方程式與商標（WebView2、FFmpeg、Windows 字型、ACC 商標）見 THIRD-PARTY-NOTICES.md。
@@ -373,15 +390,16 @@ LITE_README = """# Apex Lite
 
 BANNER_OLD = [
     # the title attribute carries the same sentence without the <b> wrapper
-    ('僅供離線單機使用。本工具為唯讀，不會修改遊戲的任何狀態；請遵守你所使用之賽事平台自身的規則。',
+    ('僅供離線單機使用。本工具不會修改遊戲的任何狀態；請遵守你所使用之賽事平台自身的規則。',
      '僅供離線單機使用。嚴禁在 LFM、PITSKILL.IO、Hipole、TVRL、PXN Pers 聯賽、FullPush 等任何官方賽事平台使用；一經使用，後果自負。'),
-    ('僅供離線單機使用。本工具為唯讀，不會修改遊戲的任何狀態；請遵守你所使用之賽事平台自身的規則。',
+    # the visible span carries a <b> around the first sentence
+    ('<b>僅供離線單機使用。</b>本工具不會修改遊戲的任何狀態；請遵守你所使用之賽事平台自身的規則。',
      '<b>僅供離線單機使用。</b>嚴禁在 LFM、PITSKILL.IO、Hipole、TVRL、PXN Pers 聯賽、FullPush 等任何官方賽事平台使用；一經使用，後果自負。'),
-    ('**僅供離線單機使用。**本工具為唯讀，不會修改遊戲的任何狀態；請遵守你所使用之賽事平台自身的規則。',
+    ('**僅供離線單機使用。**本工具不會修改遊戲的任何狀態；請遵守你所使用之賽事平台自身的規則。',
      '**僅供離線單機使用。**嚴禁在 LFM、PITSKILL.IO、Hipole、TVRL、PXN Pers 聯賽、FullPush 等任何官方賽事平台使用；一經使用，後果自負。'),
-    ('**仅供离线单机使用。**本工具为只读，不会修改游戏的任何状态；请遵守你所使用之赛事平台自身的规则。',
+    ('**仅供离线单机使用。**本工具不会修改游戏的任何状态；请遵守你所使用之赛事平台自身的规则。',
      '**仅供离线单机使用。**严禁在 LFM、PITSKILL.IO、Hipole、TVRL、PXN Pers 联赛、FullPush 等任何官方赛事平台使用；一旦使用，后果自负。'),
-    ('**Offline single-player only.** The tool is read-only and changes nothing in the game; respect the rules of whatever platform you race on.',
+    ('**Offline single-player only.** The tool changes nothing in the game; respect the rules of whatever platform you race on.',
      '**Offline single-player use only.** Forbidden on any official competition platform - LFM, PITSKILL.IO, Hipole, TVRL, PXN Pers, FullPush and the like. Use them and you carry the consequences.'),
 ]
 SAFE_NOTE_OLD = [
@@ -399,6 +417,12 @@ def patch_banner(dst):
         src = src.replace(old, new)
     for old, new in SAFE_NOTE_OLD:
         src = src.replace(old, new)
+    src = src.replace("The backend writes ACC's loaded realism damageRate directly in process memory. This is",
+                      "This edition has no damage assist: nothing in it writes into the game. This")
+    # the overlay row described the data source as "read-only shared memory"; keep the fact,
+    # drop the label
+    src = src.replace('唯讀遊戲共享記憶體', '只讀取遊戲共享記憶體')
+    src = src.replace('只读游戏共享内存', '只读取游戏共享内存')
     open(p, 'w', encoding='utf-8').write(src)
 
 

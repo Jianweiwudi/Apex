@@ -1752,7 +1752,7 @@
       "f.power":"引擎马力","f.powerNote":"引擎扭矩曲线（power.lut） · 微调 0.001x，Shift 0.01x","tq":"已写入 {n} 条扭矩曲线",
        "st.accdev":"已连接 · ACC 功能开发中",
        
-       "t.restored":"已恢复原厂值","act.undo":"撤销","t.undone":"已还原到操作前的值","t.accReset":"加速计时已重置","t.gameAc":"已切换到 Assetto Corsa","t.gameAcc":"已切换到 Competizione","t.rescan":"重新扫描中…",
+       "t.restored":"已恢复原厂值","act.undo":"撤销","t.undone":"已还原到操作前的值","t.accReset":"加速计时已重置","t.gameAc":"已切换到 Assetto Corsa","t.gameAcc":"已切换到 Competizione","t.gameNotRunning":"请先启动该游戏，切换才会生效","t.rescan":"重新扫描中…",
        "s.sess":"赛段",
        "acc.idle":"待起步","acc.run":"计时中","acc.half":"已过 100","acc.done":"完成",
        "p.title":"赛段与加油","p.practice":"练习","p.quali":"排位","p.race":"正赛",
@@ -1821,7 +1821,7 @@
       "f.power":"引擎馬力","f.powerNote":"引擎扭矩曲線（power.lut） · 微調 0.001x，Shift 0.01x","tq":"已寫入 {n} 條扭矩曲線",
        "st.accdev":"已連接 · ACC 功能開發中",
        
-       "t.restored":"已恢復原廠值","act.undo":"復原","t.undone":"已還原到操作前的值","t.accReset":"加速計時已重置","t.gameAc":"已切換到 Assetto Corsa","t.gameAcc":"已切換到 Competizione","t.rescan":"重新掃描中…",
+       "t.restored":"已恢復原廠值","act.undo":"復原","t.undone":"已還原到操作前的值","t.accReset":"加速計時已重置","t.gameAc":"已切換到 Assetto Corsa","t.gameAcc":"已切換到 Competizione","t.gameNotRunning":"請先啟動該遊戲，切換才會生效","t.rescan":"重新掃描中…",
        "s.sess":"賽段",
        "acc.idle":"待起步","acc.run":"計時中","acc.half":"已過 100","acc.done":"完成",
        "p.title":"賽段與加油","p.practice":"練習","p.quali":"排位","p.race":"正賽",
@@ -1890,7 +1890,7 @@
       "f.power":"Engine power","f.powerNote":"Engine torque curve (power.lut) · 0.001x steps, Shift 0.01x","tq":"{n} torque curve(s)",
        "st.accdev":"Connected · ACC support in progress",
        
-       "t.restored":"Restored to stock","act.undo":"Undo","t.undone":"Back to your previous values","t.accReset":"Acceleration timing reset","t.gameAc":"Switched to Assetto Corsa","t.gameAcc":"Switched to Competizione","t.rescan":"Rescanning…",
+       "t.restored":"Restored to stock","act.undo":"Undo","t.undone":"Back to your previous values","t.accReset":"Acceleration timing reset","t.gameAc":"Switched to Assetto Corsa","t.gameAcc":"Switched to Competizione","t.gameNotRunning":"Start that game first - the switch follows the running title","t.rescan":"Rescanning…",
        "s.sess":"Session",
        "acc.idle":"Standing","acc.run":"Timing","acc.half":"Past 100","acc.done":"Done",
        "p.title":"Session & fuel","p.practice":"Practice","p.quali":"Quali","p.race":"Race",
@@ -3394,6 +3394,15 @@
     switchGame(g);
     send({ cmd:"game", value: g });
     toast(g === "acc" ? t("t.gameAcc") : t("t.gameAc"));
+    // The switch is a request to the host, which follows whichever game is actually running.
+    // Without this the half that is not running just did nothing: the UI flipped for a moment
+    // and the next status tick put it back, with no hint why.
+    setTimeout(function(){
+      if (st && st.game && st.game !== g){
+        setGame(st.game);
+        toast(t("t.gameNotRunning"));
+      }
+    }, 1500);
   });
 
   /* ---------------- buttons / shortcuts ---------------- */

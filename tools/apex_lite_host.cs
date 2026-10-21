@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
@@ -13,9 +14,16 @@ namespace ApexLite
     // page's read-only HTTP calls to 127.0.0.1:7798, so none of that code exists here.
     internal static class Program
     {
+        // The previous host was system-DPI aware (awareness=1). Without this the process is DPI
+        // unaware, Windows renders the window at 96 dpi and stretches the bitmap: on a 125 %
+        // screen the whole panel - WebView included - comes out soft and slightly the wrong size.
+        [DllImport("user32.dll")]
+        private static extern bool SetProcessDPIAware();
+
         [STAThread]
         private static void Main()
         {
+            try { SetProcessDPIAware(); } catch { }
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Shell());
@@ -30,8 +38,12 @@ namespace ApexLite
         {
             Text = "Apex Lite";
             StartPosition = FormStartPosition.CenterScreen;
-            MinimumSize = new Size(980, 640);
-            Size = new Size(1400, 900);
+            // Size against the working area instead of a hard-coded pixel size: with DPI
+            // awareness on, 1400x900 on a 2560x1440 desktop at 125 % is a smallish window,
+            // and a fixed size would look wrong on every other screen as well.
+            var wa = Screen.PrimaryScreen.WorkingArea;
+            MinimumSize = new Size((int)(wa.Width * 0.52), (int)(wa.Height * 0.55));
+            Size = new Size((int)(wa.Width * 0.86), (int)(wa.Height * 0.88));
             BackColor = Color.FromArgb(11, 13, 16);
             try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch { }
 
