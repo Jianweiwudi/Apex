@@ -2468,7 +2468,7 @@
      曲线是车数据块里的静态数据，写进去不会被游戏每帧重算覆盖；换 setup / 重进赛道
      会被重新读盘，后端每 2 秒自检一次并自动重贴。 */
   var GRIP_API = "http://127.0.0.1:7798";
-  var gripLast = null, gripTimer = null, gripDragging = false, gripSentAt = 0;
+  var gripLast = null, gripTimer = null, gripDragging = false, gripSentAt = 0, gripLastApplied = null;
   var gripLocating = false, gripT0 = 0;
 
   function gripDown(){
@@ -2506,6 +2506,14 @@
     if (sl && !gripDragging && (Date.now() - gripSentAt) > 1500 &&
         isFinite(v) && Math.abs(v - Number(sl.dataset.val)) > 0.0005)
       setSlider(sl, v, false);
+    // 這張卡的值來自抓地力後端，不是宿主，所以右上的燈要自己在這裡點亮。
+    // flash() 會把 240 ms 的計時器重置，連續拖動時燈是「一直亮」，放手後才淡掉，
+    // 不會像早期那樣每一格閃一次。
+    var pushed = Number(info.applied || info.x);
+    if (isFinite(pushed)){
+      if (gripLastApplied !== null && Math.abs(pushed - gripLastApplied) > 0.0005) flash("aeroLive");
+      gripLastApplied = pushed;
+    }
   }
   function gripPush(v){
     gripSentAt = Date.now();
@@ -5253,7 +5261,7 @@
         // the indicator across a single 8-step drag, which strobed it continuously. lastPw still
         // tracks, so there is no delayed flash once the drag ends.
         if (lastPw === null){ lastPw = m.power; }
-        else if (Math.abs(m.power - lastPw) > 0.0005){ lastPw = m.power; if (powerSl !== dragEl) flash("powerLive"); }
+        else if (Math.abs(m.power - lastPw) > 0.0005){ lastPw = m.power; flash("powerLive"); }
         if (powerSl !== dragEl) setSlider(powerSl, m.power, false);
       }
       // Fuel and tyre are NOT inside the power test above. They used to be, and because the
@@ -5286,7 +5294,7 @@
       // 宿主每个状态包都带 aero=1.00，之前会把滑块拽回去，和卡里的值来回打架 -> 一直闪。
       if (typeof m.aero === "number" && !aeroSl.dataset.grip){
         if (lastA === null){ lastA = m.aero; }
-      else if (Math.abs(m.aero - lastA) > 0.0005){ lastA = m.aero; if (aeroSl !== dragEl) flash("aeroLive"); }
+      else if (Math.abs(m.aero - lastA) > 0.0005){ lastA = m.aero; flash("aeroLive"); }
         if (aeroSl !== dragEl) setSlider(aeroSl, m.aero, false);
       }
       if (lastState === null){ lastState = st.state; }
