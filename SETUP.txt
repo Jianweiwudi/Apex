@@ -1,0 +1,43 @@
+Apex 安裝／搬移檢查表
+==================================================
+
+需要什麼
+  · Windows 10 / 11 x64
+  · Microsoft Edge WebView2 Evergreen Runtime（Apex.exe 是 WebView2 宿主）
+  · Python 3（3.8 以上）。找不到時把環境變數 APEX_PY 指到 pythonw.exe 即可
+  · Assetto Corsa Competizione（Steam 版；非 Steam 版請在面板手動指定資料夾）
+
+第一次使用，或把整個資料夾搬去別台電腦之後
+  1. 雙擊 setup.cmd
+     · 註冊「Apex Grip Watchdog」排程工作（登入時 + 每 5 分鐘；只在 127.0.0.1:7798
+       沒有回應時才啟動後端，平常什麼都不做）
+     · 執行環境檢查，逐項列出 PASS / FAIL / INFO，結果另存 tools\_doctor.log
+  2. 之後照常雙擊桌面「Apex」捷徑
+
+平常怎麼啟動（都不會跳黑窗）
+  · 桌面「Apex」捷徑 → Apex.vbs → wscript 以隱藏模式跑 ApexLauncher.ps1
+  · 桌面「Apex Overlay」捷徑 → ApexOverlay.vbs（HUD）
+  · 也可以直接雙擊 Apex.vbs / ApexOverlay.vbs，效果一樣
+
+舊的啟動方式（相容保留）
+  · 桌面 Apex 捷徑 → ApexLauncher.ps1：先確認後端、必要時啟動並等它就緒，再開面板
+  · 直接開 Apex.exe 也可以：看門狗最多 5 分鐘內會把後端補上（面板每 3 秒輪詢，
+    後端回來就自動恢復，不用重開）
+
+找不到遊戲或影片
+  · 面板「啟動動畫」區塊可手動指定 ACC 資料夾
+  · 影片狀態：tools\apex_doctor.ps1 會比對遊戲內檔案與 ui\media\apex_intro.wmv 是否一致
+
+想換成自己的開場影片
+  · 面板「啟動動畫」→「匯入我的影片…」選檔即可（會自動轉成 1080p60、72.22 秒）
+  · 轉檔需要 ffmpeg，第一次先執行一次：
+      powershell -ExecutionPolicy Bypass -File tools\get_ffmpeg.ps1
+
+出問題看哪裡
+  · tools\_doctor.log          環境檢查結果
+  · tools\_grip_start.log      後端啟動時用了哪個 Python
+  · tools\_grip_watchdog.log   看門狗每次補啟動的紀錄
+  · 後端狀態：http://127.0.0.1:7798/status
+
+移除看門狗
+  schtasks /Delete /TN "Apex Grip Watchdog" /F

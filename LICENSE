@@ -1,0 +1,111 @@
+# Apex — 使用授權條款（Apex Licence）
+
+版本 1.2 · 2026-10-21 · 正體中文與英文並列，如有歧異以正體中文為準。
+
+Copyright (c) 2026 Apex contributors.
+
+本條款適用於 Apex 及其原始碼、二進位檔案、隨附文件與內含的媒體素材（以下合稱「本軟體」）。
+下載、安裝、執行或以任何方式使用本軟體，即表示您已閱讀、理解並同意本條款全部內容。
+
+---
+
+## 一、授權範圍
+
+在完全遵守本條款的前提下，作者授予您下列**非專屬、不可轉讓**的權利：
+
+1. 檢視、研究本軟體的原始碼；
+2. 為**個人、非商業**目的編譯與執行本軟體；
+3. 修改原始碼以符合個人需求；
+4. 以**未修改的完整形式**再散布本軟體，但必須一併附上本條款與全部聲明。
+
+未明示授予的權利，均由作者保留。
+
+## 二、使用限制（違反任一款即超出本授權範圍）
+
+1. **僅限離線單機。** 不得在任何線上多人對局、線上伺服器、線上競賽，或任何需要連線至網際網路的遊戲模式中使用本軟體，亦不得用於任何具排名、獎勵或競爭性質的線上環境。
+2. 不得販售本軟體，不得將其用於商業產品或服務，不得就其收取任何費用。
+3. 不得移除或變更本軟體中的任何著作權、授權或免責聲明。
+4. 不得使用本軟體規避任何數位版權管理（DRM）措施，或從事任何侵害他人合法權益之行為。
+5. 不得將本軟體用於任何線上賽事平台（包含但不限於 LFM、PITSKILL 等），或任何具競賽性質的環境。
+
+## 三、記憶體讀寫與風險
+
+1. 本軟體會**直接讀寫遊戲進程的記憶體**（例如輪胎曲線、`damageRate`），這是對遊戲執行狀態的直接干預。
+2. 使用本軟體可能導致帳號被封鎖、遊戲資料損壞、存檔遺失或其他不可預期的後果。
+3. 上述風險與後果**完全由使用者自行承擔**，作者不提供任何形式的保證，亦不承擔任何責任。
+4. 若無法接受上述任何一條，請立即停止使用並刪除本軟體。
+
+## 四、使用者自行匯入的影片
+
+1. 本軟體提供「匯入我的影片」功能，會將**使用者自行提供**的影片在本機重新編碼為遊戲可播放的格式，並可選擇性替換遊戲的啟動片頭。
+2. 該影片**不在本軟體的散布範圍內**，作者不提供、不托管、不轉散布任何使用者匯入的影片。
+3. 使用者必須自行確保其匯入的影片擁有合法權利（著作權、肖像權、音樂授權等）。因使用該影片而產生的任何權利爭議，**由使用者自行負責**。
+4. 轉檔完全在本機進行；本軟體不會上傳、備份或收集使用者匯入的檔案。
+
+## 五、隱私
+
+1. 本軟體**不連網**（除了 `127.0.0.1` 上的本機服務），不收集、不上傳任何個人資料，亦不含任何遙測或分析。
+2. 所有設定、日誌與狀態檔僅儲存在使用者本機（`grip\movie.json`、`grip\*.log` 等）。
+3. 本軟體不會讀取、修改或傳送與功能無關的任何檔案。
+
+## 六、第三方元件與商標
+
+1. **Microsoft Edge WebView2 Runtime** — 面板的執行環境，依 Microsoft 的授權條款提供，不隨本軟體散布。
+2. **FFmpeg** — 僅在「匯入影片」功能需要時由使用者自行下載（`tools\get_ffmpeg.ps1`），**不隨本軟體散布**；其授權（LGPL/GPL）與著作權屬 FFmpeg 專案。
+3. **字型** — 使用 Windows 內建字型（Bahnschrift、微軟正黑體等），不隨本軟體散布。
+4. **Assetto Corsa Competizione** 為 Kunos Simulazioni 與 505 Games 的商標與著作。本軟體為**非官方**的第三方工具，與上述公司無任何隸屬、贊助或背書關係。
+5. 本軟體不含、也不散布任何遊戲本體的檔案；片頭替換僅在使用者本機複製檔案，並保留原檔備份。
+
+## 七、免責聲明
+
+本軟體按「現狀」提供，不附任何明示或默示的保證，包括但不限於可商用性、特定用途適用性及不侵權之保證。
+在任何情況下，作者均不就任何索賠、損害或其他責任負責，無論係因合約、侵權或其他原因而生，亦不論是否與本軟體或本軟體之使用或其他交易有關。
+
+## 八、條款變更
+
+作者保留隨時修改本條款的權利。修改後的條款公布於本檔案即生效；繼續使用本軟體即視為接受修改後的條款。
+
+---
+
+# Apex Licence (English)
+
+Version 1.2 · 2026-10-21. The Traditional Chinese text above prevails in case of conflict.
+
+Copyright (c) 2026 Apex contributors.
+
+Permission is granted, free of charge, to any person obtaining a copy of this software and
+associated files (the "Software"), to view, study, modify and run the Software for **personal,
+non-commercial, offline use only**, subject to the following conditions:
+
+1. **Offline single-player only.** The Software must not be used in any online multiplayer
+   session, online server, online competition, or any ranked / rewarded / competitive
+   environment. Using memory-editing tools online may violate the game's terms and lead to a
+   permanent ban; you accept that risk entirely.
+2. No selling, no commercial use, no charging for the Software or any derivative of it.
+3. Copyright, licence and disclaimer notices must not be removed or altered.
+4. No circumvention of any DRM, and no infringement of third-party rights.
+5. Redistribution is allowed only in unmodified, complete form, together with this licence.
+
+**Memory access.** The Software reads and writes game process memory. Account bans, corrupted
+saves or any other damage are the user's sole responsibility; the author gives no warranty and
+accepts no liability.
+
+**User-imported videos.** The "import my video" feature re-encodes a video supplied by the user,
+locally, so the game can play it. Such videos are not part of the Software and are never
+distributed with it. The user is responsible for holding the necessary rights to any video they
+import. Nothing is uploaded; conversion happens entirely on the local machine.
+
+**Privacy.** The Software does not connect to the internet (other than its own services on
+127.0.0.1), collects no personal data and contains no telemetry. Settings and logs stay on the
+local machine.
+
+**Third-party components.** Microsoft Edge WebView2 Runtime (Microsoft licence, not bundled);
+FFmpeg (LGPL/GPL, downloaded by the user on demand, not bundled); Windows system fonts (not
+bundled). Assetto Corsa Competizione is a trademark of Kunos Simulazioni / 505 Games; this is an
+unofficial third-party tool with no affiliation, sponsorship or endorsement.
+
+**Disclaimer.** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

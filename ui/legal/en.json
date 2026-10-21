@@ -1,0 +1,48 @@
+{
+  "version": "1.5",
+  "title": "License Agreement & Disclaimer",
+  "updated": "2026-10-17",
+  "intro": "For offline single-player use only. It must not be used in any online mode. Before you start using Apex (\"this software\") please read all of the terms below. It reads and writes the game process's memory, which is a direct intervention in the game's running state - decide whether to use it only once you understand the risk.",
+  "sections": [
+    {
+      "title": "⚠ Offline single-player use only (read this)",
+      "body": "1. This tool reads and writes the game process's memory directly - a direct intervention in the game's running state.\n2. This tool may ONLY be used in single-player / offline mode.\n3. Using it in any online multiplayer match, on an online server, or in any connected mode is strictly forbidden.\n4. Memory-modification tools used online are very likely to be caught by anti-cheat, violate the game's terms of service, and get your account permanently banned - usually with no appeal.\n5. You bear every consequence yourself: a ban, corrupted game data, lost saves. The author accepts no liability.\n6. If you cannot accept any of the above, stop using this software and delete it now."
+    },
+    {
+      "id": "league",
+      "title": "⛔ Strictly forbidden on official competition platforms (key clause)",
+      "body": "1. This software must NOT be used on any official competition, league, ranked ladder, leaderboard, or any online platform with a competitive element, including but not limited to:\n     • Low Fuel Motorsport (LFM)\n     • PITSKILL.IO\n     • Hipole\n     • TVRL (Taiwan Virtual Racing League)\n     • PXN Pers league (PXN series)\n     • FullPush\n     as well as their practice, qualifying, race, test and coaching servers, and any affiliated or derived server.\n2. That list is illustrative, not exhaustive. Any platform with ranking, lap timing, points, entry review or sporting regulations is out of bounds.\n3. Using this software on those platforms means competing with modified car performance - that is cheating. If detected it will normally void your lap and race results, get you banned from the series and permanently banned from the platform, and may implicate your team, your team-mates and team points.\n4. Every consequence (account ban, competition ban, erased results, reputational damage, disputes or legal liability) is borne entirely by you. The author accepts no liability and will not assist with any appeal, unban request or evidence.\n5. The only legitimate use of this software is offline single-player practice, personal setup research and single-player race simulation. Once you enter any online session - on the platforms above or not - the risk and the consequences are yours alone."
+    },
+    {
+      "id": "law",
+      "title": "1. Compliance with Laws",
+      "body": "1. You agree to use the Software only in compliance with all applicable laws and regulations in your jurisdiction.\n2. The Software is intended solely for personal study and research in single-player / offline mode.\n3. You must not use the Software in any form of online multiplayer. Using memory-modification tools in online matches may violate the game's terms of service and result in a permanent account ban; you accept that consequence yourself.\n4. You must not use the Software to circumvent any digital rights management (DRM) measure, or to infringe the lawful rights of any third party."
+    },
+    {
+      "id": "license",
+      "title": "2. Software License",
+      "body": "1. The Software is licensed under the accompanying LICENSE file (\"Apex Licence\"), which forms part of these terms; where the two differ, the LICENSE file prevails.\n2. Provided you comply with the licence in full, you may read and study the source, compile and run it for personal non-commercial purposes, modify it for your own needs, and redistribute it unmodified and in full.\n3. You must not sell the Software, use it in a commercial product or service, or charge for it.\n4. The Software is provided \"as is\". The author reserves the right to change, update or stop maintaining it at any time, and has no obligation to provide technical support."
+    },
+    {
+      "id": "privacy",
+      "title": "3. Privacy Policy",
+      "body": "1. The Software collects, stores and uploads no personal information whatsoever.\n2. The Software contains no network functionality, does not connect to the internet, and includes no telemetry, analytics or advertising components.\n3. The Software performs only the following operations on your own machine: reading and writing the memory of the game process; storing local configuration under %LOCALAPPDATA%\\Apex\\ (per-car stock values, a log file, this consent record, and per-car-per-track lap times and fuel estimates); writing back the game's race.ini configuration file when you enable the relevant feature; and, after you explicitly pick race.ini, reading that file only to extract the session lengths used for the lap and fuel estimates.\n4. All of that data stays on your own computer and never leaves your device. Deleting the %LOCALAPPDATA%\\Apex\\ folder removes all local data."
+    },
+    {
+      "id": "disclaimer",
+      "title": "4. Disclaimer of Warranty",
+      "body": "1. The Software is provided \"as is\" and \"as available\", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and non-infringement.\n2. Modifying game memory may cause the game to crash, corrupt save data, lose progress, trigger anti-cheat systems, or result in an account ban.\n3. You understand and accept all risk arising from your use of the Software. The author accepts no responsibility for any direct or indirect loss arising from the use of, or inability to use, the Software."
+    },
+    {
+      "title": "5. Limitation of Liability",
+      "body": "1. The Software is open source and completely free of charge. The author charges you nothing in any form, and no sale, service or agency relationship arises between you and the author through it.\n2. The Software is a personal project, shared at no cost. It is not a commercial product or service, and the author has no obligation to provide technical support, updates, maintenance or customisation, nor any guarantee that any feature will keep working.\n3. The source code is public so that you can read and study it, and you may modify it for your own needs - but any version you modify is your own responsibility, and the author is not involved in any problem it causes.\n4. To the maximum extent permitted by applicable law, the author's total liability for any claim arising out of the Software is limited to the amount you actually paid for it; because the Software is entirely free, that amount is zero.\n5. If you do not accept any part of these terms, stop using the Software and delete it immediately."
+    },
+    {
+      "title": "6. Not affiliated",
+      "body": "This is an unofficial third-party tool. It is not affiliated with, sponsored by, endorsed by or licensed by Kunos Simulazioni, Assetto Corsa, Assetto Corsa Competizione, or any of their affiliates, publishers or agents. All game names, trademarks and copyrights belong to their respective owners."
+    }
+  ],
+  "footer": "Clicking \"Agree\" confirms that you have read, understood and voluntarily accept all of the terms above. Clicking \"Reject\" will exit the Software immediately and no consent will be recorded.",
+  "agree": "Agree",
+  "reject": "Reject"
+}

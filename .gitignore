@@ -1,0 +1,25 @@
+# ---- downloaded on demand, never committed ----
+tools/ffmpeg/
+
+# ---- build output ----
+tools/_build4/
+tools/_dl/
+tools/blender-*/
+
+# ---- local state written at runtime ----
+grip/movie.json
+grip/_pick_video.ps1
+grip/*.log
+grip/damage_cache.json
+grip/grip_factor.txt
+tools/*.log
+tools/_test*
+
+# ---- python ----
+__pycache__/
+*.pyc
+
+# ---- os noise ----
+Thumbs.db
+desktop.ini
+.DS_Store

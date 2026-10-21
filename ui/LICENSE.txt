@@ -1,0 +1,144 @@
+Apex 使用授權條款
+Apex Licence — Version 1.1 — 2026-10-16
+
+Copyright (c) 2026 Apex contributors.
+
+本授權條款適用於 Apex 及其原始碼、二進位檔案與隨附文件（以下合稱「本軟體」）。
+本條款以正體中文與英文並列；如兩者解釋有歧異，以正體中文版本為準。
+
+================================================================================
+一、授權範圍
+================================================================================
+在您完全遵守本條款全部條件的前提下，作者授予您下列非專屬、不可轉讓的權利：
+(a) 檢視、研究本軟體的原始碼；
+(b) 為個人、非商業目的編譯與執行本軟體；
+(c) 修改原始碼以符合個人需求；
+(d) 以未修改的完整形式再散布本軟體，但須一併附上本授權條款檔案及全部聲明。
+未明示授予的權利，均由作者保留。
+
+================================================================================
+二、使用限制（違反任一款即超出本授權範圍）
+================================================================================
+(a) 【僅限離線單機】您不得在任何線上多人對局、線上伺服器、線上競賽，或任何需要
+    連線至網際網路的遊戲模式中使用本軟體，亦不得用於任何具排名、獎勵或競爭性質
+    的線上環境。
+(b) 您不得販售本軟體，不得將其用於商業產品或服務，不得就其收取任何費用。
+(c) 您不得移除或變更本軟體中的任何著作權、授權或免責聲明。
+(d) 您不得使用本軟體規避任何數位版權管理（DRM）措施，或從事任何侵害他人合法
+    權益之行為。
+(e) 您應自行確認在您所在國家或地區使用本軟體之合法性，並自行承擔全部遵守義務。
+
+================================================================================
+三、無擔保
+================================================================================
+本軟體按「現狀」及「現有」提供，不附帶任何明示或默示之擔保，包括但不限於對可
+商用性、特定用途適用性、正確性、不中斷、無錯誤及不侵權之擔保。作者不保證本軟
+體能與任何遊戲版本、作業系統或硬體相容，亦不保證任何功能持續可用。
+
+================================================================================
+四、責任限制
+================================================================================
+在適用法律允許的最大範圍內，作者對因本軟體所生之任何索賠所承擔的全部責任，以
+您實際支付的金額為限；由於本軟體完全免費，該限額為零。作者在任何情況下均不對
+任何直接、間接、附隨、特殊、懲罰性或衍生性損害負責，包括但不限於遊戲帳號被封
+鎖、遊戲資料或存檔損毀、進度遺失、電腦損壞、資料滅失、利潤損失或第三人索賠，
+且不論作者是否已被告知該等損害之可能性。
+
+================================================================================
+五、使用後果由您自行承擔
+================================================================================
+本軟體完全免費，作者未向您收取任何費用，雙方之間不因本軟體成立任何買賣、服務、
+委任、僱傭、合夥或代理關係。
+
+您應於使用本軟體前自行評估全部風險。您使用本軟體之行為及其所產生的一切後果，
+均由您自行承擔；作者不因您的使用行為而對您或任何第三人負擔任何義務或責任。
+
+若您因使用本軟體而與任何第三人（包括但不限於遊戲發行商、平台業者或服務提供
+者）發生爭議，該爭議僅存在於您與該第三人之間，與作者無涉。
+
+================================================================================
+六、無支援義務、無法律關係
+================================================================================
+本軟體係作者基於個人興趣開發並無償分享，並非商業產品或服務。作者無提供技術支
+援、更新、維護、修正或客製化之義務，亦不保證回應任何請求。您與作者之間不因本
+軟體成立任何買賣、服務、委任、僱傭、合夥或代理關係。
+
+================================================================================
+七、非官方聲明
+================================================================================
+本軟體為非官方第三方工具，與 Kunos Simulazioni、Assetto Corsa、Assetto Corsa
+Competizione 及其任何關係企業、發行商、代理商均無任何關聯、贊助、背書或授權關
+係。所有遊戲名稱、商標與著作權均屬其各自所有人。
+
+================================================================================
+八、接受
+================================================================================
+您對本軟體之任何使用、複製、編譯、修改或散布，均視為您已閱讀、理解並自願同意
+本條款之全部內容。若您不同意其中任何一部分，請立即停止使用並刪除本軟體。
+
+================================================================================
+ENGLISH VERSION
+================================================================================
+The Traditional Chinese version above prevails in case of any discrepancy.
+
+1. GRANT — Subject to full compliance with this licence, the author grants you a
+   non-exclusive, non-transferable right to (a) read and study the source code;
+   (b) compile and run the software for personal, non-commercial purposes;
+   (c) modify the source for your own needs; and (d) redistribute the software
+   unmodified and in full, provided this licence and all notices accompany it.
+   All rights not expressly granted are reserved.
+
+2. RESTRICTIONS — Any breach of these falls outside the grant. (a) OFFLINE
+   SINGLE-PLAYER ONLY: you must not use the software in any online multiplayer
+   match, on any online server, in any online competition, or in any game mode
+   requiring an internet connection, nor in any ranked, rewarded or competitive
+   online environment. (b) You must not sell it, use it in a commercial product
+   or service, or charge for it. (c) You must not remove or alter any copyright,
+   licence or disclaimer notice. (d) You must not use it to circumvent any DRM or
+   to infringe the rights of others. (e) You are solely responsible for
+   determining and complying with the law of your own jurisdiction.
+
+3. NO WARRANTY — The software is provided "as is" and "as available", without
+   warranty of any kind, express or implied, including but not limited to
+   merchantability, fitness for a particular purpose, accuracy, uninterrupted or
+   error-free operation, and non-infringement. The author does not warrant that it
+   is compatible with any game version, operating system or hardware, nor that any
+   feature will keep working.
+
+4. LIMITATION OF LIABILITY — To the maximum extent permitted by applicable law, the
+   author's total liability for any claim arising out of the software is limited to
+   the amount you actually paid for it; because the software is entirely free, that
+   amount is zero. The author is in no event liable for any direct, indirect,
+   incidental, special, punitive or consequential damages, including but not limited
+   to a banned game account, corrupted game data or saves, lost progress, damage to
+   your computer, loss of data, lost profits, or third-party claims, whether or not
+   the author was advised of the possibility of such damages.
+
+5. YOU BEAR THE CONSEQUENCES OF YOUR OWN USE — The software is entirely free. The
+   author charges you nothing, and no sale, service, agency, employment, partnership
+   or fiduciary relationship arises between you and the author through it.
+
+   You should assess the whole risk yourself before using the software. Your use of
+   it, and everything that follows from that use, is yours to bear; the author owes
+   no duty and accepts no responsibility towards you or any third party because of
+   it.
+
+   If a dispute arises between you and any third party - including but not limited to
+   a game publisher, platform operator or service provider - that dispute is between
+   you and that third party alone, and the author is not a party to it.
+
+6. NO SUPPORT, NO RELATIONSHIP — The software is a personal project shared at no
+   cost. It is not a commercial product or service, and the author has no obligation
+   to provide support, updates, maintenance, fixes or customisation, nor to respond
+   to any request. No sale, service, agency, employment, partnership or fiduciary
+   relationship arises between you and the author through it.
+
+7. NOT AFFILIATED — This is an unofficial third-party tool. It is not affiliated
+   with, sponsored by, endorsed by or licensed by Kunos Simulazioni, Assetto Corsa,
+   Assetto Corsa Competizione, or any of their affiliates, publishers or agents. All
+   game names, trademarks and copyrights belong to their respective owners.
+
+8. ACCEPTANCE — Any use, copying, compilation, modification or distribution of the
+   software constitutes your having read, understood and voluntarily accepted this
+   licence in full. If you do not accept any part of it, stop using the software and
+   delete it immediately.
