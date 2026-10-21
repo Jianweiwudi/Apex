@@ -1725,86 +1725,43 @@ def movie_locate(force=False):
 
 PERF_MARK_B = '; >>> Apex performance mode (managed by Apex, do not edit) >>>'
 PERF_MARK_E = '; <<< Apex performance mode <<<'
-PERF_BLOCK = """[SystemSettings]
-r.ShadowQuality=0
-r.Shadow.MaxResolution=1
-r.Shadow.MinResolution=1
-r.Shadow.DistanceScale=0.0
-r.Shadow.CSM.MaxCascades=1
-r.Shadow.MaxCSMResolution=1
-r.Shadow.RadiusThreshold=0.15
-r.Shadow.TexelsPerPixel=1.0
-r.Shadow.PreShadowResolutionFactor=0.25
-r.Shadow.CachedShadowsTextureScale=0.25
-"""
+PERF_STATE = os.path.join(HERE, 'perf.json')
+PERF_LEVELS = (0, 1, 2, 3, 4)
 
-
-def _perf_ini():
-    p = os.path.join(os.environ.get('LOCALAPPDATA', ''), 'AC2', 'Saved', 'Config',
-                     'WindowsNoEditor', 'Engine.ini')
-    return p
-
-
-def _perf_strip(text):
-    i = text.find(PERF_MARK_B)
-    if i < 0:
-        return text
-    j = text.find(PERF_MARK_E, i)
-    if j < 0:
-        return text[:i]
-    j = text.find('\n', j)
-    return text[:i] + (text[j + 1:] if j >= 0 else '')
-
-
-def perf_status():
-    p = _perf_ini()
-    if not os.path.isfile(p):
-        return {'ok': True, 'on': False, 'exists': False, 'ini': p}
-    try:
-        txt = open(p, encoding='utf-8', errors='replace').read()
-    except OSError:
-        return {'ok': False, 'error': 'read-failed'}
-    return {'ok': True, 'on': PERF_MARK_B in txt, 'exists': True, 'ini': p}
-
-
-# UE4 在「套用畫質等級」時會用自己的 Scalability 覆蓋 Engine.ini 的 [SystemSettings]，
-# 所以只寫 Engine.ini 沒有用 —— 真正生效的是 Scalability.ini 裡的 [ShadowQuality@0]。
-# 兩份都寫：Scalability.ini 負責蓋掉最低畫質，Engine.ini 當第二道保險。
-PERF_FILE_BLOCK = {
-    'Scalability.ini': """[ShadowQuality@0]
-r.ShadowQuality=0
-r.Shadow.MaxResolution=1
-r.Shadow.MaxCSMResolution=1
-r.Shadow.MinResolution=1
-r.Shadow.DistanceScale=0.0
-r.Shadow.CSM.MaxCascades=1
-r.Shadow.RadiusThreshold=1.0
-r.Shadow.TexelsPerPixel=1.0
-r.Shadow.PreShadowResolutionFactor=0.05
-r.Shadow.CachedShadowsTextureScale=0.1
-r.Shadow.CSM.TransitionScale=0.0
-r.DistanceFieldShadowing=0
-r.CapsuleShadows=0
-r.ContactShadows=0
-r.Shadow.MaxPreShadowResolution=1
-""",
-    'Engine.ini': """[SystemSettings]
-r.ShadowQuality=0
-r.Shadow.MaxResolution=1
-r.Shadow.MaxCSMResolution=1
-r.Shadow.MinResolution=1
-r.Shadow.DistanceScale=0.0
-r.Shadow.CSM.MaxCascades=1
-r.Shadow.RadiusThreshold=1.0
-r.Shadow.TexelsPerPixel=1.0
-r.Shadow.PreShadowResolutionFactor=0.05
-r.Shadow.CachedShadowsTextureScale=0.1
-r.DistanceFieldShadowing=0
-r.CapsuleShadows=0
-r.ContactShadows=0
-r.Shadow.MaxPreShadowResolution=1
-""",
+# 每個開關對應一組 UE4 cvar，以及它屬於哪一個 Scalability 群組。
+# 之所以要按群組、而且 0–4 每一級都寫：UE4 套用畫質時會用 Scalability 覆蓋
+# Engine.ini 的 [SystemSettings]，只寫一次會被使用者選的畫質等級蓋回去。
+PERF_TWEAKS = {
+    'shadows': ('ShadowQuality', [
+        ('r.ShadowQuality', '0'), ('r.Shadow.MaxResolution', '1'),
+        ('r.Shadow.MaxCSMResolution', '1'), ('r.Shadow.MinResolution', '1'),
+        ('r.Shadow.DistanceScale', '0.0'), ('r.Shadow.CSM.MaxCascades', '1'),
+        ('r.Shadow.RadiusThreshold', '1.0'), ('r.Shadow.TexelsPerPixel', '1.0'),
+        ('r.Shadow.PreShadowResolutionFactor', '0.05'),
+        ('r.Shadow.CachedShadowsTextureScale', '0.1'),
+        ('r.DistanceFieldShadowing', '0'), ('r.CapsuleShadows', '0'),
+        ('r.ContactShadows', '0'),
+    ]),
+    'volumetric': ('EffectsQuality', [
+        ('r.VolumetricFog', '0'),
+        ('r.VolumetricFog.GridPixelSize', '64'),
+        ('r.VolumetricFog.HistoryMissSupersampleCount', '0'),
+    ]),
+    'ssr': ('PostProcessQuality', [
+        ('r.SSR.Quality', '0'),
+        ('r.SSR.HalfResSceneColor', '1'),
+        ('r.SSR.MaxRoughness', '0.0'),
+    ]),
+    'bloom': ('PostProcessQuality', [('r.BloomQuality', '0')]),
+    'motionblur': ('PostProcessQuality', [
+        ('r.MotionBlurQuality', '0'), ('r.MotionBlurScatter', '0'),
+    ]),
+    'ssao': ('PostProcessQuality', [
+        ('r.AmbientOcclusionLevels', '0'), ('r.AmbientOcclusionRadiusScale', '1.0'),
+    ]),
+    'aa': ('AntiAliasingQuality', [('r.AntiAliasingMethod', '0')]),
 }
+PERF_IDS = tuple(PERF_TWEAKS.keys())
 
 
 def _perf_dir():
@@ -1812,77 +1769,132 @@ def _perf_dir():
                         'WindowsNoEditor')
 
 
-def _perf_ini():
-    return os.path.join(_perf_dir(), 'Engine.ini')
+def _perf_load():
+    try:
+        with open(PERF_STATE, encoding='utf-8') as f:
+            d = json.load(f)
+        return [x for x in d.get('enabled', []) if x in PERF_TWEAKS]
+    except Exception:
+        return []
+
+
+def _perf_save(ids):
+    try:
+        with open(PERF_STATE, 'w', encoding='utf-8') as f:
+            json.dump({'enabled': list(ids)}, f, ensure_ascii=False, indent=1)
+    except OSError:
+        pass
 
 
 def _perf_strip(text):
-    i = text.find(PERF_MARK_B)
-    if i < 0:
-        return text
-    j = text.find(PERF_MARK_E, i)
-    if j < 0:
-        return text[:i]
-    j = text.find('\n', j)
-    return text[:i] + (text[j + 1:] if j >= 0 else '')
+    """移除所有由 Apex 寫入的區塊（可能因舊版殘留而有多個）。"""
+    while True:
+        i = text.find(PERF_MARK_B)
+        if i < 0:
+            return text
+        j = text.find(PERF_MARK_E, i)
+        if j < 0:
+            text = text[:i]
+            continue
+        j = text.find('\n', j)
+        text = text[:i] + (text[j + 1:] if j >= 0 else '')
 
 
-def perf_status():
-    d = _perf_dir()
-    p = os.path.join(d, 'Scalability.ini')
-    if not os.path.isdir(d):
-        return {'ok': True, 'on': False, 'exists': False, 'ini': d}
-    try:
-        txt = open(p, encoding='utf-8', errors='replace').read() if os.path.isfile(p) else ''
-    except OSError:
-        return {'ok': False, 'error': 'read-failed'}
-    return {'ok': True, 'on': PERF_MARK_B in txt, 'exists': True, 'ini': p}
+def _perf_cvars(ids):
+    out = []
+    for tid in ids:
+        out.extend(PERF_TWEAKS[tid][1])
+    seen, uniq = set(), []
+    for k, v in out:
+        if k in seen:
+            continue
+        seen.add(k)
+        uniq.append((k, v))
+    return uniq
 
 
-def _perf_one(name, on):
+def _perf_scalability(ids):
+    by_group = {}
+    for tid in ids:
+        grp, cv = PERF_TWEAKS[tid]
+        by_group.setdefault(grp, []).extend(cv)
+    lines = []
+    for grp, cv in by_group.items():
+        seen, uniq = set(), []
+        for k, v in cv:
+            if k in seen:
+                continue
+            seen.add(k)
+            uniq.append((k, v))
+        for lv in PERF_LEVELS:
+            lines.append('[%s@%d]' % (grp, lv))
+            lines.extend('%s=%s' % (k, v) for k, v in uniq)
+            lines.append('')
+    return '\n'.join(lines).rstrip() + '\n'
+
+
+def _perf_engine(ids):
+    cv = _perf_cvars(ids)
+    if not cv:
+        return ''
+    return '[SystemSettings]\n' + '\n'.join('%s=%s' % (k, v) for k, v in cv) + '\n'
+
+
+def _perf_write(name, block):
     d = _perf_dir()
     p = os.path.join(d, name)
     bak = p + '.apex.bak'
-    block = PERF_FILE_BLOCK[name]
     txt = open(p, encoding='utf-8', errors='replace').read() if os.path.isfile(p) else ''
-    if on:
-        if txt and not os.path.isfile(bak):
-            shutil.copy2(p, bak)
-        body = _perf_strip(txt).rstrip()
-        body = (body + '\n\n' if body else '') + PERF_MARK_B + '\n' + block + PERF_MARK_E + '\n'
-        with open(p, 'w', encoding='utf-8', newline='\n') as f:
-            f.write(body)
-        return
-    # 關閉：有備份就直接還原（逐位元組），沒有備份就只刪自己那一段
-    if os.path.isfile(bak):
-        btxt = open(bak, encoding='utf-8', errors='replace').read()
-        if _perf_strip(txt).strip() == btxt.strip():
+    if not block:
+        # 全部關掉：有備份就逐位元組還原，沒有備份就只刪自己那一段
+        if os.path.isfile(bak):
             shutil.copy2(bak, p)
-            return
-    stripped = _perf_strip(txt).rstrip()
-    if not stripped and not os.path.isfile(bak):
-        os.remove(p)          # 這檔案本來不存在，是我們建的
+        else:
+            stripped = _perf_strip(txt).rstrip()
+            if stripped:
+                with open(p, 'w', encoding='utf-8', newline='\n') as f:
+                    f.write(stripped + '\n')
+            elif os.path.isfile(p):
+                os.remove(p)
         return
+    if os.path.isfile(p) and not os.path.isfile(bak):
+        shutil.copy2(p, bak)
+    body = _perf_strip(txt).rstrip()
+    body = (body + '\n\n' if body else '') + PERF_MARK_B + '\n' + block + PERF_MARK_E + '\n'
     with open(p, 'w', encoding='utf-8', newline='\n') as f:
-        f.write(stripped + '\n' if stripped else '')
+        f.write(body)
 
 
-def perf_apply(on):
-    """真正把 ACC 的陰影關掉。
+def perf_apply_files(ids):
+    _perf_write('Scalability.ini', _perf_scalability(ids) if ids else '')
+    _perf_write('Engine.ini', _perf_engine(ids))
 
-    ACC 的 ScalabilityGroups 最低（sg.ShadowQuality=0）仍然會畫陰影，因為 UE4 的
-    BaseScalability.ini 在 ShadowQuality@0 裡就是保留了 1 級陰影。要蓋掉它，必須提供
-    使用者層級的 Scalability.ini，覆寫 [ShadowQuality@0]。"""
+
+def perf_status():
+    ids = _perf_load()
+    return {'ok': True, 'enabled': ids,
+            'options': [{'id': k, 'on': k in ids} for k in PERF_IDS],
+            'any': bool(ids), 'ini': _perf_dir()}
+
+
+def perf_set(tid, on):
+    if tid not in PERF_TWEAKS:
+        return {'ok': False, 'error': 'bad-id'}, 400
     d = _perf_dir()
     if not os.path.isdir(d):
-        return {'ok': False, 'error': 'no-acc'}
+        return {'ok': False, 'error': 'no-acc'}, 404
+    ids = _perf_load()
+    if on and tid not in ids:
+        ids.append(tid)
+    if not on and tid in ids:
+        ids.remove(tid)
     try:
-        for name in PERF_FILE_BLOCK:
-            _perf_one(name, on)
+        perf_apply_files(ids)
     except OSError as e:
-        return {'ok': False, 'error': 'write-failed: %s' % e}
-    log('性能模式 %s（Scalability.ini + Engine.ini）' % ('開啟' if on else '關閉'))
-    return dict(perf_status(), changed=True)
+        return {'ok': False, 'error': 'write-failed: %s' % e}, 500
+    _perf_save(ids)
+    log('畫質選項 %s → %s' % (tid, '開' if on else '關'))
+    return dict(perf_status(), changed=True), 200
 
 
 def movie_state(info):
@@ -2570,8 +2582,10 @@ class Handler(BaseHTTPRequestHandler):
                 obj, code = movie_import_begin()
                 return self._send(obj, code)
             if u.path == '/perf':
-                if q.get('on'):
-                    return self._send(perf_apply(q.get('on', ['0'])[0] in ('1', 'true', 'on')))
+                if q.get('id'):
+                    obj, code = perf_set(q.get('id', [''])[0],
+                                         q.get('on', ['0'])[0] in ('1', 'true', 'on'))
+                    return self._send(obj, code)
                 return self._send(perf_status())
             if u.path == '/movie/volume':
                 try:

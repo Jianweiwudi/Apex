@@ -481,6 +481,17 @@
      the user only wants to read. */
   .legalBtn{width:100%;justify-content:space-between;font-weight:600;gap:10px}
 .legalBtn2{margin-top:8px}
+.perfList{display:flex;flex-direction:column;gap:2px;margin:2px 0 4px}
+.perfRow{display:flex;align-items:flex-start;gap:10px;padding:9px 2px;border-top:1px solid var(--line-1)}
+.perfRow:first-child{border-top:none}
+.perfTx{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto}
+.perfName{font-size:13px;font-weight:600;color:var(--tx)}
+.perfSub{font-size:11px;color:var(--tx3);line-height:1.45}
+.sw{flex:0 0 auto;width:40px;height:22px;border-radius:11px;border:1px solid var(--line-2);background:var(--track);position:relative;cursor:pointer;transition:background .18s var(--ease),border-color .18s var(--ease)}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--tx3);transition:transform .18s var(--ease),background .18s var(--ease)}
+.sw[aria-pressed="true"]{background:color-mix(in srgb,var(--grip) 26%,transparent);border-color:color-mix(in srgb,var(--grip) 55%,transparent)}
+.sw[aria-pressed="true"]::after{transform:translateX(18px);background:var(--grip)}
+.sw:disabled{opacity:.45;cursor:default}
 .mvVol{display:flex;align-items:center;gap:9px;margin-top:10px}
 .mvVolK{font-size:11px;font-weight:600;color:var(--tx2);flex:0 0 auto}
 .mvVol input[type=range]{flex:1 1 auto;min-width:0;height:4px}
@@ -1338,8 +1349,8 @@
   <div class="grp">
     <h3 id="setPerfH" data-i18n="perf.set">畫質</h3>
     <p class="legalNote" data-i18n="perf.note">效能模式比遊戲的最低畫質再低一階：除了遊戲內的畫質等級，還會覆寫 Scalability.ini 的 [ShadowQuality@0]，把整組陰影關掉、陰影距離歸零、陰影貼圖降到 1 px。</p>
-    <button type="button" class="btn" id="perfBtn" data-i18n="perf.off">開啟效能模式</button>
-    <p class="legalNote" id="perfHint" data-i18n="perf.hint">寫入 ACC 的 Engine.ini，修改前會備份；需要重新啟動遊戲才會生效。</p>
+    <div class="perfList" id="perfList"></div>
+    <p class="legalNote" id="perfHint" data-i18n="perf.hint">寫入 Scalability.ini 與 Engine.ini，改前會備份；必須完全退出 ACC 再重新啟動才生效。</p>
   </div>
   <div class="grp">
     <h3 id="setSoundH" data-i18n="set.sound">提示音</h3>
@@ -1605,7 +1616,14 @@
       "btn.restore":"恢复原厂","hint.rescan":"重新扫描","hint.restore":"恢复原厂",
       "set.display":"显示","set.uiscale":"界面大小","set.text":"文字大小",
     "set.displayNote":"界面大小会连版面一起缩放；文字大小只改字号。两者可以并用。",
-    "perf.set":"画质","perf.note":"性能模式比游戏的最低画质再低一阶：整组阴影关闭、阴影距离归零、阴影分辨率降到 1 px。","perf.off":"开启性能模式","perf.on":"性能模式已开启 · 点击关闭","perf.hint":"写入 Scalability.ini（覆盖 [ShadowQuality@0]）与 Engine.ini，改前会备份；必须完全退出 ACC 再重新启动才生效。","perf.fail":"写入失败：{e}","perf.restart":"已写入。请完全退出 ACC（不是回主菜单）再重新启动。","perf.restored":"已还原。同样需要重启 ACC 才会恢复阴影。",
+    "perf.set":"画质","perf.note":"性能模式比游戏的最低画质再低一阶：整组阴影关闭、阴影距离归零、阴影分辨率降到 1 px。","perf.off":"开启性能模式","perf.on":"性能模式已开启 · 点击关闭","perf.hint":"写入 Scalability.ini（覆盖 [ShadowQuality@0]）与 Engine.ini，改前会备份；必须完全退出 ACC 再重新启动才生效。","perf.fail":"写入失败：{e}","perf.restart":"已写入。请完全退出 ACC（不是回主菜单）再重新启动。","perf.restored":"已还原。同样需要重启 ACC 才会生效。",
+    "perf.o.shadows":"阴影","perf.o.shadows.d":"车、建筑、树的影子整组关闭；效果最明显，画面也会变平。",
+    "perf.o.volumetric":"体积雾","perf.o.volumetric.d":"远景的雾气与光束；关掉后远方变干净，省下不少填充率。",
+    "perf.o.ssr":"屏幕空间反射","perf.o.ssr.d":"湿地、车漆、玻璃上的实时倒影；关掉后这些表面只剩环境光。",
+    "perf.o.bloom":"泛光","perf.o.bloom.d":"亮部溢出的光晕（路灯、太阳、车灯）。",
+    "perf.o.motionblur":"动态模糊","perf.o.motionblur.d":"高速时边缘的拖影；关掉画面更锐利。",
+    "perf.o.ssao":"环境光遮蔽","perf.o.ssao.d":"物件接触处的暗角；关掉后细节变平但更快。",
+    "perf.o.aa":"抗锯齿","perf.o.aa.d":"边缘平滑；关掉帧数上升，但锯齿很明显。",
     "set.lang":"语言","safe.set":"安全锁","safe.setNote":"锁定时，会写入游戏内存的五个项目（下压力、引擎马力、油量、胎压、碰撞无车损）将被停用；其余功能不受影响。解锁需先阅读并同意授权声明。状态保存在本机，重启后依然有效。","safe.locked":"已锁定 · 点击解锁","safe.open":"已解锁 · 点击锁定","safe.title":"高风险功能授权声明","safe.meta":"解锁前请阅读并同意","safe.body":"以下功能会直接写入游戏内存：下压力、引擎马力、油量、轮胎胎压与碰撞无车损（撞击不累积车损）。在线上对局、官方赛事或任何排行榜中使用这些修改，可能被判定为作弊，导致账号封禁、成绩作废或其他处罚。请仅在单机／离线环境中使用，并自行确认所在平台与赛事规则。使用即表示你已理解上述风险，全部后果由你本人承担，开发者不承担任何责任。","safe.agree":"我已阅读并理解上述声明，同意自行承担全部责任","safe.ok":"同意并解锁","safe.cancel":"取消","safe.resp":"责任自负 · 未勾选同意则保持锁定","safe.gateTitle":"已锁定","safe.gateNote":"此项会写入游戏内存。解锁需先同意授权声明。","safe.gateBtn":"解锁","safe.unlocked":"安全锁已解除，请注意：后果自负","safe.relocked":"安全锁已锁定，高风险功能已停用","safe.ariaLocked":"安全锁：已锁定，点击查看授权声明","safe.ariaOpen":"安全锁：已解锁，点击重新锁定","set.legal":"协议与条款","legal.title":"使用授权与免责声明","legal.close":"关闭","legal.note":"本软件不联网、不收集、不上传任何数据；全部设置仅保存在本机。","legal.missing":"条款文件未能载入，以下仅为摘要。使用前请先阅读完整条款。","disc.text":"**仅供离线单机使用。**严禁在 LFM、PITSKILL.IO、Hipole、TVRL、PXN Pers 联赛、FullPush 等任何官方赛事平台使用；一旦使用，后果自负。","disc.more":"查看条款","set.font":"字体大小","set.sys":"跟随系统","set.theme":"主题","set.auto":"自动","set.dark":"深色","set.light":"浅色",
       "set.sound":"提示音","set.on":"开启","set.off":"关闭",
       "aria.close":"关闭",
@@ -1667,7 +1685,14 @@
       "btn.restore":"恢復原廠","hint.rescan":"重新掃描","hint.restore":"恢復原廠",
       "set.display":"顯示","set.uiscale":"介面大小","set.text":"文字大小",
     "set.displayNote":"介面大小會連版面一起縮放；文字大小只改字級。兩者可以並用。",
-    "perf.set":"畫質","perf.note":"效能模式比遊戲的最低畫質再低一階：整組陰影關閉、陰影距離歸零、陰影解析度降到 1 px。","perf.off":"開啟效能模式","perf.on":"效能模式已開啟 · 點擊關閉","perf.hint":"寫入 Scalability.ini（覆寫 [ShadowQuality@0]）與 Engine.ini，改前會備份；必須完全退出 ACC 再重新啟動才生效。","perf.fail":"寫入失敗：{e}","perf.restart":"已寫入。請完全退出 ACC（不是回主選單）再重新啟動。","perf.restored":"已還原。同樣需要重啟 ACC 才會恢復陰影。",
+    "perf.set":"畫質","perf.note":"效能模式比遊戲的最低畫質再低一階：整組陰影關閉、陰影距離歸零、陰影解析度降到 1 px。","perf.off":"開啟效能模式","perf.on":"效能模式已開啟 · 點擊關閉","perf.hint":"寫入 Scalability.ini（覆寫 [ShadowQuality@0]）與 Engine.ini，改前會備份；必須完全退出 ACC 再重新啟動才生效。","perf.fail":"寫入失敗：{e}","perf.restart":"已寫入。請完全退出 ACC（不是回主選單）再重新啟動。","perf.restored":"已還原。同樣需要重啟 ACC 才會生效。",
+    "perf.o.shadows":"陰影","perf.o.shadows.d":"車、建築、樹的影子整組關閉；效果最明顯，畫面也會變平。",
+    "perf.o.volumetric":"體積霧","perf.o.volumetric.d":"遠景的霧氣與光束；關掉後遠方變乾淨，省下不少填充率。",
+    "perf.o.ssr":"螢幕空間反射","perf.o.ssr.d":"濕地、車漆、玻璃上的即時倒影；關掉後這些表面只剩環境光。",
+    "perf.o.bloom":"泛光","perf.o.bloom.d":"亮部溢出的光暈（路燈、太陽、車燈）。",
+    "perf.o.motionblur":"動態模糊","perf.o.motionblur.d":"高速時邊緣的拖影；關掉畫面更銳利。",
+    "perf.o.ssao":"環境光遮蔽","perf.o.ssao.d":"物件接觸處的暗角；關掉後細節變平但更快。",
+    "perf.o.aa":"抗鋸齒","perf.o.aa.d":"邊緣平滑；關掉幀數上升，但鋸齒很明顯。",
     "set.lang":"語言","safe.set":"安全鎖","safe.setNote":"鎖定時，會寫入遊戲記憶體的五個項目（下壓力、引擎馬力、油量、胎壓、碰撞無車損）將被停用；其餘功能不受影響。解鎖需先閱讀並同意授權聲明。狀態保存在本機，重啟後依然有效。","safe.locked":"已鎖定 · 點擊解鎖","safe.open":"已解鎖 · 點擊鎖定","safe.title":"高風險功能授權聲明","safe.meta":"解鎖前請閱讀並同意","safe.body":"以下功能會直接寫入遊戲記憶體：下壓力、引擎馬力、油量、輪胎胎壓與碰撞無車損（撞擊不累積車損）。在線上對局、官方賽事或任何排行榜中使用這些修改，可能被判定為作弊，導致帳號封鎖、成績作廢或其他處罰。請僅在單機／離線環境中使用，並自行確認所在平台與賽事規則。使用即表示你已理解上述風險，全部後果由你本人承擔，開發者不承擔任何責任。","safe.agree":"我已閱讀並理解上述聲明，同意自行承擔全部責任","safe.ok":"同意並解鎖","safe.cancel":"取消","safe.resp":"責任自負 · 未勾選同意則保持鎖定","safe.gateTitle":"已鎖定","safe.gateNote":"此項會寫入遊戲記憶體。解鎖需先同意授權聲明。","safe.gateBtn":"解鎖","safe.unlocked":"安全鎖已解除，請注意：後果自負","safe.relocked":"安全鎖已鎖定，高風險功能已停用","safe.ariaLocked":"安全鎖：已鎖定，點擊查看授權聲明","safe.ariaOpen":"安全鎖：已解鎖，點擊重新鎖定","set.legal":"協議與條款","legal.title":"使用授權與免責聲明","legal.close":"關閉","legal.note":"本軟體不連網、不收集、不上傳任何資料；全部設定僅保存在本機。","legal.missing":"條款文件未能載入，以下僅為摘要。使用前請先閱讀完整條款。","disc.text":"**僅供離線單機使用。**嚴禁在 LFM、PITSKILL.IO、Hipole、TVRL、PXN Pers 聯賽、FullPush 等任何官方賽事平台使用；一經使用，後果自負。","disc.more":"查看條款","set.font":"字體大小","set.sys":"跟隨系統","set.theme":"主題","set.auto":"自動","set.dark":"深色","set.light":"淺色",
       "set.sound":"提示音","set.on":"開啟","set.off":"關閉",
       "aria.close":"關閉",
@@ -1729,7 +1754,14 @@
       "btn.restore":"Restore stock","hint.rescan":"Rescan","hint.restore":"Restore",
       "set.display":"Display","set.uiscale":"Interface size","set.text":"Text size",
     "set.displayNote":"Interface size zooms layout and type together; Text size changes type only. They combine.",
-    "perf.set":"Graphics","perf.note":"Performance mode goes one step below the game's lowest preset: shadows off entirely, shadow distance zero, shadow maps down to 1 px.","perf.off":"Enable performance mode","perf.on":"Performance mode is on · click to disable","perf.hint":"Writes Scalability.ini (overriding [ShadowQuality@0]) and Engine.ini, backing both up; ACC must be fully quit and relaunched.","perf.fail":"Write failed: {e}","perf.restart":"Written. Quit ACC completely (not just to the menu) and relaunch.","perf.restored":"Reverted. Restart ACC to get shadows back.",
+    "perf.set":"Graphics","perf.note":"Performance mode goes one step below the game's lowest preset: shadows off entirely, shadow distance zero, shadow maps down to 1 px.","perf.off":"Enable performance mode","perf.on":"Performance mode is on · click to disable","perf.hint":"Writes Scalability.ini (overriding [ShadowQuality@0]) and Engine.ini, backing both up; ACC must be fully quit and relaunched.","perf.fail":"Write failed: {e}","perf.restart":"Written. Quit ACC completely (not just to the menu) and relaunch.","perf.restored":"Reverted. Restart ACC to apply.",
+    "perf.o.shadows":"Shadows","perf.o.shadows.d":"Cars, buildings, trees — the whole shadow pass. Biggest win, flattest look.",
+    "perf.o.volumetric":"Volumetric fog","perf.o.volumetric.d":"Distant haze and light shafts; turning it off cleans up the horizon and saves fill rate.",
+    "perf.o.ssr":"Screen-space reflections","perf.o.ssr.d":"Live reflections on wet tarmac, paint and glass; off leaves ambient light only.",
+    "perf.o.bloom":"Bloom","perf.o.bloom.d":"Light bleeding from street lamps, the sun and headlights.",
+    "perf.o.motionblur":"Motion blur","perf.o.motionblur.d":"Edge smear at speed; off gives a sharper image.",
+    "perf.o.ssao":"Ambient occlusion","perf.o.ssao.d":"Contact darkening where objects meet; off is flatter but faster.",
+    "perf.o.aa":"Anti-aliasing","perf.o.aa.d":"Edge smoothing; off raises frame rate but jaggies show.",
     "set.lang":"Language","safe.set":"Safety lock","safe.setNote":"While it is on, the five items that write into the game's memory (downforce, engine power, fuel, tyre pressure, collision damage) are switched off; everything else keeps working. Unlocking asks you to read and accept the declaration first. The state is stored locally and survives a restart.","safe.locked":"Locked - tap to unlock","safe.open":"Unlocked - tap to lock","safe.title":"High-risk feature authorisation","safe.meta":"Read and accept before unlocking","safe.body":"The following features write directly into the game's memory: downforce, engine power, fuel, tyre pressure and collision damage immunity. Using them in an online race, an official event or on any leaderboard may be treated as cheating and can lead to a ban, invalidated results or other penalties. Use them in single player / offline sessions only, and check the rules of the platform or series you are on. By continuing you accept these risks: every consequence is yours, and the developer takes no responsibility.","safe.agree":"I have read and understood this and accept full responsibility","safe.ok":"Accept and unlock","safe.cancel":"Cancel","safe.resp":"Your responsibility - the lock stays on until you tick the box","safe.gateTitle":"Locked","safe.gateNote":"This writes into the game's memory. Unlocking needs the declaration accepted first.","safe.gateBtn":"Unlock","safe.unlocked":"Safety lock removed - the consequences are yours","safe.relocked":"Safety lock on - the high-risk features are off again","safe.ariaLocked":"Safety lock: locked, open the declaration","safe.ariaOpen":"Safety lock: unlocked, lock it again","set.legal":"Terms & policies","legal.title":"Terms of use & disclaimer","legal.close":"Close","legal.note":"Apex does not go online, collect or upload anything. All settings stay on this machine.","legal.missing":"The terms file could not be loaded. What follows is only a summary - read the full terms before use.","disc.text":"**Offline single-player use only.** Forbidden on any official competition platform - LFM, PITSKILL.IO, Hipole, TVRL, PXN Pers, FullPush and the like. Use them and you carry the consequences.","disc.more":"View terms","set.font":"Font size","set.sys":"System","set.theme":"Theme","set.auto":"Auto","set.dark":"Dark","set.light":"Light",
       "set.sound":"Sound","set.on":"On","set.off":"Off",
       "aria.close":"Close",
@@ -2061,6 +2093,7 @@
     ovRender();
     applySafe();          // the lock button and its settings row build their own strings
     mvRender();           // same again for the startup-movie panel
+    perfRender();         // the graphics switches build their labels at render time
   }
   function fontScale(){
     if (S.font === "75") return 0.75;
@@ -4340,37 +4373,64 @@
      ACC's own ScalabilityGroups bottom out at sg.ShadowQuality=0 and still draw shadows.
      Apex writes a marked block into Engine.ini that turns them off entirely (quality 0,
      distance 0, 1 px shadow maps) and removes it again on the way back. */
-  var PERF = { on: false, busy: false };
+  var PERF = { list: [], busy: false };
   function perfRender(){
-    var b = document.getElementById("perfBtn"), h = document.getElementById("perfHint");
-    if (!b) return;
-    b.textContent = t(PERF.on ? "perf.on" : "perf.off");
-    b.classList.toggle("primary", !!PERF.on);
-    b.disabled = !!PERF.busy;
-    if (h) h.textContent = t("perf.hint");
+    var box = document.getElementById("perfList");
+    if (!box) return;
+    box.textContent = "";
+    for (var i = 0; i < PERF.list.length; i++){
+      var o = PERF.list[i], row = document.createElement("div");
+      row.className = "perfRow";
+      var tx = document.createElement("div");
+      tx.className = "perfTx";
+      var nm = document.createElement("div");
+      nm.className = "perfName";
+      nm.textContent = t("perf.o." + o.id);
+      var sub = document.createElement("div");
+      sub.className = "perfSub";
+      sub.textContent = t("perf.o." + o.id + ".d");
+      tx.appendChild(nm); tx.appendChild(sub);
+      var sw = document.createElement("button");
+      sw.type = "button";
+      sw.className = "sw";
+      sw.setAttribute("role", "switch");
+      sw.setAttribute("aria-pressed", o.on ? "true" : "false");
+      sw.setAttribute("aria-label", t("perf.o." + o.id));
+      sw.disabled = !!PERF.busy;
+      sw.setAttribute("data-perf", o.id);
+      row.appendChild(tx); row.appendChild(sw);
+      box.appendChild(row);
+    }
   }
   function perfLoad(){
     fetch(GRIP_API + "/perf", { cache: "no-store" })
       .then(function(r){ return r.json(); })
-      .then(function(j){ if (j && j.ok){ PERF.on = !!j.on; perfRender(); } })
+      .then(function(j){ if (j && j.ok){ PERF.list = j.options || []; perfRender(); } })
       .catch(function(){});
   }
-  function perfToggle(){
+  function perfToggle(id, want, btn){
     if (PERF.busy) return;
-    PERF.busy = true; perfRender();
-    var want = !PERF.on;
-    fetch(GRIP_API + "/perf?on=" + (want ? 1 : 0), { cache: "no-store" })
+    PERF.busy = true;
+    if (btn) btn.disabled = true;
+    fetch(GRIP_API + "/perf?id=" + encodeURIComponent(id) + "&on=" + (want ? 1 : 0), { cache: "no-store" })
       .then(function(r){ return r.json(); })
       .then(function(j){
         PERF.busy = false;
         if (!j || !j.ok){ perfRender(); toast(t("perf.fail").replace("{e}", (j && j.error) || "?")); return; }
-        PERF.on = !!j.on; perfRender();
+        PERF.list = j.options || PERF.list; perfRender();
         toast(t(want ? "perf.restart" : "perf.restored"));
       })
       .catch(function(){ PERF.busy = false; perfRender(); });
   }
-  var perfBtn0 = document.getElementById("perfBtn");
-  if (perfBtn0) perfBtn0.addEventListener("click", perfToggle);
+  var perfList0 = document.getElementById("perfList");
+  if (perfList0) perfList0.addEventListener("click", function(e){
+    var b = e.target.closest ? e.target.closest(".sw") : null;
+    if (!b) return;
+    var id = b.getAttribute("data-perf");
+    var row = null, i;
+    for (i = 0; i < PERF.list.length; i++) if (PERF.list[i].id === id) row = PERF.list[i];
+    perfToggle(id, !(row && row.on), b);
+  });
   perfLoad();
 
   /* Automatic stint numbers. The overlay reads AC's graphics page straight out of shared
