@@ -95,6 +95,22 @@ GRIP = Grip()
 
 '''
 
+LITE_CSS = """<style>
+/* ---- Apex Lite ----
+   The write cards (grip, engine power, fuel lock, tyre lock) and the collision-damage assist
+   are not part of this edition. They are taken out of the grid flow rather than merely hidden,
+   so the remaining cards fill the row instead of leaving two empty slots. Two columns, because
+   only three cards are left, and the stint planner spans the full width. */
+html.lite .card[data-risk]{display:none}
+html.lite .grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+html.lite .card.plan{grid-column:span 2!important}
+/* the collision-damage assist and the safety lock exist only to gate memory writes */
+html.lite #damageBtn,html.lite #safeBtn,html.lite #safeSetBtn{display:none!important}
+html.lite .grp:has(#setSafeH){display:none!important}
+html.lite .actCol{justify-content:flex-start}
+</style>
+</head>"""
+
 THREADS = [
     "    threading.Thread(target=boot, daemon=True).start()\n",
     "    threading.Thread(target=pump_loop, daemon=True).start()\n",
@@ -138,10 +154,7 @@ def patch_ui(dst):
     p = os.path.join(dst, 'ui', 'index.html')
     src = open(p, encoding='utf-8').read()
     src = src.replace('<html lang=', '<html class="lite" lang=', 1)
-    extra = ('<style>/* Apex Lite: the memory-writing cards are not part of this edition */\n'
-             'html.lite .card[data-risk]{display:none}\n'
-             'html.lite #safeBtn{display:none}\n'
-             '</style>\n</head>')
+    extra = LITE_CSS
     src = src.replace('</head>', extra, 1)
     open(p, 'w', encoding='utf-8').write(src)
 
