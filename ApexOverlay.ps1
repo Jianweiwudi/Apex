@@ -242,6 +242,12 @@ function Read-Game {
     gear    = Read-I32 $p 16
     rpm     = Read-I32 $p 20
     speed   = Read-F32 $p 28
+    # Physics page wheel block, same offsets as AC's SPageFilePhysics 1.7 - ACC keeps the head of
+    # that layout intact. Read defensively: if a layout ever moves, the values land outside the
+    # ranges checked below and the panel simply hides the tyre card instead of showing nonsense.
+    press   = @((Read-F32 $p 88), (Read-F32 $p 92), (Read-F32 $p 96), (Read-F32 $p 100))
+    wear    = @((Read-F32 $p 120), (Read-F32 $p 124), (Read-F32 $p 128), (Read-F32 $p 132))
+    ttemp   = @((Read-F32 $p 152), (Read-F32 $p 156), (Read-F32 $p 160), (Read-F32 $p 164))
     car     = (Read-WStr $s 68 33)
     track   = (Read-WStr $s 134 33)
     maxRpm  = 0
@@ -1081,6 +1087,16 @@ function State-Json {
     if ($d.last -gt 0) { $o.last = [math]::Round($d.last / 1000.0, 3) }
     if ($d.best -gt 0) { $o.best = [math]::Round($d.best / 1000.0, 3) }
     if ($d.numLaps -gt 0 -and $d.numLaps -lt 1000) { $o.numLaps = $d.numLaps }
+    # Tyre block, in AC's wheel order (FL, FR, RL, RR). Rejected wholesale if any wheel is out of
+    # range: a half-valid set would be worse than none, because the card reads as measured data.
+    $pr = @($d.press); $tt = @($d.ttemp); $tw = @($d.wear)
+    $okP = ($pr.Count -eq 4) -and (($pr | Where-Object { $_ -lt 5 -or $_ -gt 80 }).Count -eq 0)
+    $okT = ($tt.Count -eq 4) -and (($tt | Where-Object { $_ -lt -30 -or $_ -gt 260 }).Count -eq 0)
+    if ($okP) { $o.press = @($pr | ForEach-Object { [math]::Round($_, 1) }) }
+    if ($okT) { $o.ttemp = @($tt | ForEach-Object { [math]::Round($_, 0) }) }
+    if ($okT -and ($tw.Count -eq 4) -and (($tw | Where-Object { $_ -lt -0.01 -or $_ -gt 2 }).Count -eq 0)) {
+      $o.wear = @($tw | ForEach-Object { [math]::Round($_, 3) })
+    }
     $sb = Get-LapBest ("$($d.car)|$($d.track)")
     if ($sb -gt 0) { $o.bestSaved = [math]::Round($sb / 1000.0, 3) }
   }

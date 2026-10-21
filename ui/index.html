@@ -273,6 +273,23 @@
   .banner .btn{margin-left:auto;flex:0 0 auto;align-self:center;min-height:0;padding:6px 12px;
     font-size:11.5px}
 
+  /* Tyre card */
+  .tpGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:2px 0 7px}
+  .tpW{position:relative;display:grid;grid-template-columns:auto 1fr;gap:2px 7px;align-items:baseline;
+    padding:7px 9px;border-radius:10px;border:1px solid var(--line-1);
+    background:color-mix(in srgb,var(--tyre) var(--tw,6%),transparent);
+    transition:background .3s var(--ease),border-color .3s var(--ease)}
+  .tpW b{font-family:var(--font-num);font-size:9.5px;letter-spacing:.1em;color:var(--tx3)}
+  .tpW .tpP{font-family:var(--font-num);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;
+    color:var(--tx);letter-spacing:-.01em}
+  .tpW .tpT{grid-column:1 / -1;font-style:normal;font-family:var(--font-num);font-size:10.5px;
+    color:var(--tx3);font-variant-numeric:tabular-nums}
+  .tpW.hot{--tw:26%}
+  .tpW.cold{--tw:10%;--tyre:var(--aero)}
+  .tpSum{display:flex;align-items:baseline;gap:6px;font-size:10.5px;color:var(--tx3)}
+  .tpSum b{font-family:var(--font-num);font-size:12px;color:var(--tx2);margin-right:6px;font-weight:600}
+  .tpSum b:last-child{margin-right:0}
+
   /* Lap card */
   .lapBig{display:flex;align-items:baseline;gap:9px;margin:2px 0 6px}
   .lapBig span{font-family:var(--font-num);font-size:30px;font-weight:600;letter-spacing:-.02em;
@@ -1281,6 +1298,26 @@
         <p data-i18n="f.tyreNote">四輪同時鎖定。寫入的是冷胎基準值（遊戲每幀用它算出熱胎壓力），所以能穩定鎖住</p>
       </details></div>
 
+    <!-- Tyre card: four corners, each showing hot pressure and core temperature, tinted by
+         temperature. The overlay reads the physics page's wheel block and drops the whole set if
+         any wheel is out of range, so the card hides instead of printing nonsense. -->
+    <div class="card tyreCard" data-games="ac acc" style="--c:var(--tyre)">
+      <div class="halo"></div>
+      <div class="chead">
+        <div class="cico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.6"></circle><circle cx="12" cy="12" r="3.4"></circle></svg></div>
+        <div><h2 id="tyreName" data-i18n="tp.name">四輪</h2><span>TYRES · PRESS · TEMP</span></div>
+        <div class="live" id="tpLive"></div>
+      </div>
+      <div class="tpGrid" id="tpGrid">
+        <div class="tpW" data-w="0"><b>FL</b><span class="tpP">—</span><em class="tpT">—</em></div>
+        <div class="tpW" data-w="1"><b>FR</b><span class="tpP">—</span><em class="tpT">—</em></div>
+        <div class="tpW" data-w="2"><b>RL</b><span class="tpP">—</span><em class="tpT">—</em></div>
+        <div class="tpW" data-w="3"><b>RR</b><span class="tpP">—</span><em class="tpT">—</em></div>
+      </div>
+      <div class="tpSum"><span data-i18n="tp.spread">溫差</span><b id="tpSpread">—</b><span data-i18n="tp.avgP">平均胎壓</span><b id="tpAvg">—</b></div>
+      <p class="legalNote" data-i18n="tp.note">熱胎壓力（psi）與胎芯溫度（°C），四輪即時讀取自共享記憶體。</p>
+    </div>
+
     <!-- Lap card. The overlay already reads AC's graphics page (iCurrentTime / iLastTime /
          iBestTime), so the pace is available without touching the process from here. The current
          lap is interpolated between polls - a 1 s poll plus local elapsed ticks reads as a live
@@ -1693,7 +1730,7 @@
       "btn.restore":"恢复原厂","hint.rescan":"重新扫描","hint.restore":"恢复原厂",
       "set.display":"显示","set.uiscale":"界面大小","set.text":"文字大小",
     "set.displayNote":"界面大小会连版面一起缩放；文字大小只改字号。两者可以并用。",
-    "lap.name":"圈速","lap.cur":"当前圈","lap.last":"上一圈","lap.best":"最佳","lap.off":"未连到游戏","lap.note":"上一圈与最佳取自共享内存；折线是这次连接最近 10 圈。","perf.set":"画质","perf.note":"性能模式比游戏的最低画质再低一阶：整组阴影关闭、阴影距离归零、阴影分辨率降到 1 px。","perf.off":"开启性能模式","perf.on":"性能模式已开启 · 点击关闭","perf.hint":"写入 Scalability.ini（覆盖 [ShadowQuality@0]）与 Engine.ini，改前会备份；必须完全退出 ACC 再重新启动才生效。","perf.fail":"写入失败：{e}","perf.restart":"已写入。请完全退出 ACC（不是回主菜单）再重新启动。","perf.restored":"已还原。同样需要重启 ACC 才会生效。","perf.restartBtn":"应用并重启 ACC","perf.restarting":"正在重启 ACC…","perf.relaunching":"已重新启动 ACC，等它进入主菜单即可。","perf.confirmRestart":"会先正常关闭 ACC，等它结束后再自动重新启动；当前未存的赛段进度不会保留。要继续吗？",
+    "tp.name":"四轮","tp.off":"未连到游戏","tp.spread":"温差","tp.avgP":"平均胎压","tp.note":"热胎压力（psi）与胎芯温度（°C），四轮实时读取自共享内存。","lap.name":"圈速","lap.cur":"当前圈","lap.last":"上一圈","lap.best":"最佳","lap.off":"未连到游戏","lap.note":"上一圈与最佳取自共享内存；折线是这次连接最近 10 圈。","perf.set":"画质","perf.note":"性能模式比游戏的最低画质再低一阶：整组阴影关闭、阴影距离归零、阴影分辨率降到 1 px。","perf.off":"开启性能模式","perf.on":"性能模式已开启 · 点击关闭","perf.hint":"写入 Scalability.ini（覆盖 [ShadowQuality@0]）与 Engine.ini，改前会备份；必须完全退出 ACC 再重新启动才生效。","perf.fail":"写入失败：{e}","perf.restart":"已写入。请完全退出 ACC（不是回主菜单）再重新启动。","perf.restored":"已还原。同样需要重启 ACC 才会生效。","perf.restartBtn":"应用并重启 ACC","perf.restarting":"正在重启 ACC…","perf.relaunching":"已重新启动 ACC，等它进入主菜单即可。","perf.confirmRestart":"会先正常关闭 ACC，等它结束后再自动重新启动；当前未存的赛段进度不会保留。要继续吗？",
     "perf.o.shadows":"阴影","perf.o.shadows.d":"车、建筑、树的影子整组关闭；效果最明显，画面也会变平。",
     "perf.o.volumetric":"体积雾","perf.o.volumetric.d":"远景的雾气与光束；关掉后远方变干净，省下不少填充率。",
     "perf.o.ssr":"屏幕空间反射","perf.o.ssr.d":"湿地、车漆、玻璃上的实时倒影；关掉后这些表面只剩环境光。",
@@ -1762,7 +1799,7 @@
       "btn.restore":"恢復原廠","hint.rescan":"重新掃描","hint.restore":"恢復原廠",
       "set.display":"顯示","set.uiscale":"介面大小","set.text":"文字大小",
     "set.displayNote":"介面大小會連版面一起縮放；文字大小只改字級。兩者可以並用。",
-    "lap.name":"圈速","lap.cur":"當前圈","lap.last":"上一圈","lap.best":"最佳","lap.off":"未連到遊戲","lap.note":"上一圈與最佳取自共享記憶體；折線是這次連線最近 10 圈。","perf.set":"畫質","perf.note":"效能模式比遊戲的最低畫質再低一階：整組陰影關閉、陰影距離歸零、陰影解析度降到 1 px。","perf.off":"開啟效能模式","perf.on":"效能模式已開啟 · 點擊關閉","perf.hint":"寫入 Scalability.ini（覆寫 [ShadowQuality@0]）與 Engine.ini，改前會備份；必須完全退出 ACC 再重新啟動才生效。","perf.fail":"寫入失敗：{e}","perf.restart":"已寫入。請完全退出 ACC（不是回主選單）再重新啟動。","perf.restored":"已還原。同樣需要重啟 ACC 才會生效。","perf.restartBtn":"套用並重啟 ACC","perf.restarting":"正在重啟 ACC…","perf.relaunching":"已重新啟動 ACC，等它進入主選單即可。","perf.confirmRestart":"會先正常關閉 ACC，等它結束後再自動重新啟動；目前未存的賽段進度不會保留。要繼續嗎？",
+    "tp.name":"四輪","tp.off":"未連到遊戲","tp.spread":"溫差","tp.avgP":"平均胎壓","tp.note":"熱胎壓力（psi）與胎芯溫度（°C），四輪即時讀取自共享記憶體。","lap.name":"圈速","lap.cur":"當前圈","lap.last":"上一圈","lap.best":"最佳","lap.off":"未連到遊戲","lap.note":"上一圈與最佳取自共享記憶體；折線是這次連線最近 10 圈。","perf.set":"畫質","perf.note":"效能模式比遊戲的最低畫質再低一階：整組陰影關閉、陰影距離歸零、陰影解析度降到 1 px。","perf.off":"開啟效能模式","perf.on":"效能模式已開啟 · 點擊關閉","perf.hint":"寫入 Scalability.ini（覆寫 [ShadowQuality@0]）與 Engine.ini，改前會備份；必須完全退出 ACC 再重新啟動才生效。","perf.fail":"寫入失敗：{e}","perf.restart":"已寫入。請完全退出 ACC（不是回主選單）再重新啟動。","perf.restored":"已還原。同樣需要重啟 ACC 才會生效。","perf.restartBtn":"套用並重啟 ACC","perf.restarting":"正在重啟 ACC…","perf.relaunching":"已重新啟動 ACC，等它進入主選單即可。","perf.confirmRestart":"會先正常關閉 ACC，等它結束後再自動重新啟動；目前未存的賽段進度不會保留。要繼續嗎？",
     "perf.o.shadows":"陰影","perf.o.shadows.d":"車、建築、樹的影子整組關閉；效果最明顯，畫面也會變平。",
     "perf.o.volumetric":"體積霧","perf.o.volumetric.d":"遠景的霧氣與光束；關掉後遠方變乾淨，省下不少填充率。",
     "perf.o.ssr":"螢幕空間反射","perf.o.ssr.d":"濕地、車漆、玻璃上的即時倒影；關掉後這些表面只剩環境光。",
@@ -1831,7 +1868,7 @@
       "btn.restore":"Restore stock","hint.rescan":"Rescan","hint.restore":"Restore",
       "set.display":"Display","set.uiscale":"Interface size","set.text":"Text size",
     "set.displayNote":"Interface size zooms layout and type together; Text size changes type only. They combine.",
-    "lap.name":"Lap times","lap.cur":"Current lap","lap.last":"Last lap","lap.best":"Best","lap.off":"No game","lap.note":"Last and best come from shared memory; the line is the last 10 laps of this session.","perf.set":"Graphics","perf.note":"Performance mode goes one step below the game's lowest preset: shadows off entirely, shadow distance zero, shadow maps down to 1 px.","perf.off":"Enable performance mode","perf.on":"Performance mode is on · click to disable","perf.hint":"Writes Scalability.ini (overriding [ShadowQuality@0]) and Engine.ini, backing both up; ACC must be fully quit and relaunched.","perf.fail":"Write failed: {e}","perf.restart":"Written. Quit ACC completely (not just to the menu) and relaunch.","perf.restored":"Reverted. Restart ACC to apply.","perf.restartBtn":"Apply and restart ACC","perf.restarting":"Restarting ACC…","perf.relaunching":"ACC is launching again — wait for the main menu.","perf.confirmRestart":"ACC will be closed gracefully and relaunched automatically; unsaved session progress is lost. Continue?",
+    "tp.name":"Tyres","tp.off":"No game","tp.spread":"Spread","tp.avgP":"Avg press","tp.note":"Hot pressure (psi) and core temperature (°C), read live from shared memory.","lap.name":"Lap times","lap.cur":"Current lap","lap.last":"Last lap","lap.best":"Best","lap.off":"No game","lap.note":"Last and best come from shared memory; the line is the last 10 laps of this session.","perf.set":"Graphics","perf.note":"Performance mode goes one step below the game's lowest preset: shadows off entirely, shadow distance zero, shadow maps down to 1 px.","perf.off":"Enable performance mode","perf.on":"Performance mode is on · click to disable","perf.hint":"Writes Scalability.ini (overriding [ShadowQuality@0]) and Engine.ini, backing both up; ACC must be fully quit and relaunched.","perf.fail":"Write failed: {e}","perf.restart":"Written. Quit ACC completely (not just to the menu) and relaunch.","perf.restored":"Reverted. Restart ACC to apply.","perf.restartBtn":"Apply and restart ACC","perf.restarting":"Restarting ACC…","perf.relaunching":"ACC is launching again — wait for the main menu.","perf.confirmRestart":"ACC will be closed gracefully and relaunched automatically; unsaved session progress is lost. Continue?",
     "perf.o.shadows":"Shadows","perf.o.shadows.d":"Cars, buildings, trees — the whole shadow pass. Biggest win, flattest look.",
     "perf.o.volumetric":"Volumetric fog","perf.o.volumetric.d":"Distant haze and light shafts; turning it off cleans up the horizon and saves fill rate.",
     "perf.o.ssr":"Screen-space reflections","perf.o.ssr.d":"Live reflections on wet tarmac, paint and glass; off leaves ambient light only.",
@@ -4497,6 +4534,46 @@
       }
     }
   }
+  /* ---------------- tyre card ---------------- */
+  function tpRender(j){
+    var box = document.getElementById("tpGrid");
+    if (!box) return;
+    var cells = box.querySelectorAll(".tpW");
+    var pr = (j && j.press) || null, tt = (j && j.ttemp) || null;
+    var live = document.getElementById("tpLive");
+    if (!pr || !tt){
+      for (var i = 0; i < cells.length; i++){
+        cells[i].querySelector(".tpP").textContent = "—";
+        cells[i].querySelector(".tpT").textContent = "—";
+        cells[i].classList.remove("hot", "cold");
+      }
+      document.getElementById("tpSpread").textContent = "—";
+      document.getElementById("tpAvg").textContent = "—";
+      if (live) live.textContent = t("tp.off");
+      return;
+    }
+    if (live) live.textContent = "";
+    var mn = Math.min.apply(null, tt), mx = Math.max.apply(null, tt), sum = 0;
+    for (var k = 0; k < 4; k++){
+      var cell = cells[k];
+      cell.querySelector(".tpP").textContent = pr[k].toFixed(1);
+      cell.querySelector(".tpT").textContent = tt[k].toFixed(0) + "°C";
+      // 一個顏色就能看懂的四段：偏冷 / 正常 / 偏熱
+      cell.classList.toggle("cold", tt[k] < 70);
+      cell.classList.toggle("hot", tt[k] > 95);
+      sum += pr[k];
+    }
+    document.getElementById("tpSpread").textContent = (mx - mn).toFixed(0) + "°";
+    document.getElementById("tpAvg").textContent = (sum / 4).toFixed(1) + " psi";
+  }
+  function tpPoll(){ ovReq("state", function(j){ tpRender(j); }); }
+  (function(){
+    if (!document.getElementById("tpGrid")) return;
+    tpRender(null);
+    tpPoll();
+    setInterval(tpPoll, 2000);
+  })();
+
   function lapPoll(){
     ovReq("state", function(j){
       if (!j){ LAP.cur = 0; LAP.anchor = 0; lapRender(); return; }
