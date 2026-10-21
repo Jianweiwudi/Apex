@@ -121,6 +121,10 @@ html.lite #segGame,html.lite .sideLbl{display:none!important}
 /* the permanent offline banner belongs to the memory-writing build; the legal text is still
    reachable from Settings -> About */
 html.lite .warnStrip{display:none!important}
+/* top speed and acceleration timing are timed by the host, which this edition does not have:
+   the numbers in the markup are sample values the host would overwrite, so leaving them on
+   screen means showing 231 km/h before the game is even started */
+html.lite #speedStat,html.lite #accStat{display:none!important}
 html.lite .topbar{gap:10px}
 /* two cards per row, same height, note pinned to the bottom */
 html.lite .lapCard,html.lite .tyreCard{display:flex;flex-direction:column}
@@ -478,6 +482,47 @@ def patch_exe_name(dst):
             print('warning: could not remove the old Apex.exe (still running?)')
 
 
+def patch_brand(dst):
+    """Every user-visible "Apex" becomes "Apex-Lite".
+
+    Only display strings are touched: identifiers, the Apex-Lite state folder, the mutex and the
+    script names must keep their exact spelling or the app stops finding its own files.
+    """
+    p = os.path.join(dst, 'ui', 'index.html')
+    if os.path.isfile(p):
+        t = open(p, encoding='utf-8').read()
+        for old, new in (
+            ('<title>Apex</title>', '<title>Apex Lite</title>'),
+            # sample values that only the host would replace
+            ('<span id="maxSpeed">231</span>', '<span id="maxSpeed">\u2014</span>'),
+            ('<span id="liveSpeed">183 km/h</span>', '<span id="liveSpeed">\u2014</span>'),
+            ('<span id="acc100">6.74</span>', '<span id="acc100">\u2014</span>'),
+            ('<span id="acc200">5.92</span>', '<span id="acc200">\u2014</span>'),
+            ('<span id="acc200D">+5.26</span>', '<span id="acc200D"></span>'),
+            ('<span id="accTotal">12.66</span>', '<span id="accTotal">\u2014</span>'),
+            ('<span id="accTotalD">+11.94</span>', '<span id="accTotalD"></span>'),
+            ('data-i18n="app.name">Apex<', 'data-i18n="app.name">Apex-Lite<'),
+            ('"app.name":"Apex"', '"app.name":"Apex-Lite"'),
+            ('Apex 開場', 'Apex-Lite 開場'),
+            ('Apex 开场', 'Apex-Lite 开场'),
+            ('Apex 已更新', 'Apex-Lite 已更新'),
+            ('Apex intro', 'Apex-Lite intro'),
+            ('用桌面 Apex 捷徑', '用桌面 Apex-Lite 捷徑'),
+            ('用桌面 Apex 快捷方式', '用桌面 Apex-Lite 快捷方式'),
+            ('reopen the Apex shortcut', 'reopen the Apex-Lite shortcut'),
+            ('重新安装 Apex', '重新安装 Apex-Lite'),
+            ('重新安裝 Apex', '重新安裝 Apex-Lite'),
+        ):
+            t = t.replace(old, new)
+        open(p, 'w', encoding='utf-8').write(t)
+    ov = os.path.join(dst, 'ApexOverlay.ps1')
+    if os.path.isfile(ov):
+        t = open(ov, encoding='utf-8').read()
+        for old, new in (('Apex 抓地力', 'Apex-Lite'), ("'Apex'", "'Apex-Lite'")):
+            t = t.replace(old, new)
+        open(ov, 'w', encoding='utf-8').write(t)
+
+
 def patch_port(dst):
     files = ['ui/index.html', 'ApexGrip-Stop.cmd', 'ApexLauncher.ps1', 'SETUP.txt', 'README.md',
              'tools/apex_doctor.ps1', 'tools/grip_watchdog.ps1', 'grip/apex_grip_server.py']
@@ -634,6 +679,7 @@ def main():
     patch_docs(dst)
     patch_names(dst)
     patch_exe_name(dst)
+    patch_brand(dst)
     patch_port(dst)
     build_host(dst)
     r = subprocess.run([sys.executable, '-m', 'py_compile',
