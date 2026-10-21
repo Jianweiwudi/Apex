@@ -213,6 +213,18 @@ function Read-WStr($b, [int]$o, [int]$n) {
   return $s.Trim()
 }
 
+# Four consecutive float32 at $offset; if they are not all inside $range, retry at the candidate
+# offsets. $null when nothing validates, so the caller drops the block instead of printing zeros.
+function Read-Wheels($buf, [int]$offset, $range, $alts) {
+  foreach ($o in (@($offset) + $alts)) {
+    $v = @((Read-F32 $buf $o), (Read-F32 $buf ($o + 4)),
+           (Read-F32 $buf ($o + 8)), (Read-F32 $buf ($o + 12)))
+    $bad = @($v | Where-Object { [double]::IsNaN($_) -or $_ -lt $range[0] -or $_ -gt $range[1] })
+    if ($bad.Count -eq 0) { return $v }
+  }
+  return $null
+}
+
 function Read-Game {
   if (-not $script:gfV) {
     if (([datetime]::Now - $script:lastTry).TotalSeconds -lt 2) { return $null }
@@ -245,9 +257,14 @@ function Read-Game {
     # Physics page wheel block, same offsets as AC's SPageFilePhysics 1.7 - ACC keeps the head of
     # that layout intact. Read defensively: if a layout ever moves, the values land outside the
     # ranges checked below and the panel simply hides the tyre card instead of showing nonsense.
-    press   = @((Read-F32 $p 88), (Read-F32 $p 92), (Read-F32 $p 96), (Read-F32 $p 100))
-    wear    = @((Read-F32 $p 120), (Read-F32 $p 124), (Read-F32 $p 128), (Read-F32 $p 132))
-    ttemp   = @((Read-F32 $p 152), (Read-F32 $p 156), (Read-F32 $p 160), (Read-F32 $p 164))
+    # The wheel block sits at 88 / 120 / 152 in AC's published layout, and ACC keeps that head
+    # intact in practice - but "in practice" is not a guarantee across builds, and a silent
+    # mis-read is worse than no card at all: the first version reported four zeros and the panel
+    # simply hid the tyre card. Try the documented offsets first, then the neighbours, and keep
+    # whichever set lands inside physically sane ranges.
+    press   = Read-Wheels $p 88  @(5, 80)    @(84, 92)
+    wear    = Read-Wheels $p 120 @(-0.01, 2) @(116, 124)
+    ttemp   = Read-Wheels $p 152 @(-30, 260) @(148, 156)
     car     = (Read-WStr $s 68 33)
     track   = (Read-WStr $s 134 33)
     maxRpm  = 0

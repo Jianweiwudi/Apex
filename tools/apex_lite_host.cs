@@ -111,7 +111,9 @@ namespace ApexLite
                 Close();
                 return;
             }
-            core.Navigate(new Uri(page).AbsoluteUri);
+            // Cache-buster: WebView2 happily serves the previous index.html, which reads as
+            // "my changes did nothing" after a rebuild.
+            core.Navigate(new Uri(page).AbsoluteUri + "?v=" + DateTime.Now.Ticks);
 
             // probe: APEX_PROBE=1 dumps whether the legal JSON is readable, then leaves a file
             if (Environment.GetEnvironmentVariable("APEX_PROBE") == "1")
@@ -126,6 +128,9 @@ namespace ApexLite
                              "out.push('pill='+(p?p.textContent.trim():'none'));" +
                              "var c=document.getElementById('car');" +
                              "out.push('car='+(c?c.textContent.trim():'none'));" +
+                             "var b=document.getElementById('ovShow');" +
+                             "out.push('ovBtn='+(b?b.textContent.trim():'none'));" +
+                             "if(b){b.click();out.push('clicked');}" +
                              "return out.join(' | ');})()";
                     var res = await core.ExecuteScriptAsync(js);
                     File.WriteAllText(Path.Combine(Path.GetTempPath(), "apex_probe.txt"), res);

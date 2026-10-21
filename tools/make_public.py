@@ -451,6 +451,33 @@ def patch_banner(dst):
 LITE_PORT = '7808'
 
 
+LITE_EXE = 'Apex-Lite.exe'
+
+
+def patch_exe_name(dst):
+    """Rename the host in every script that starts it, watches it, or looks for its icon."""
+    targets = ['ApexLauncher.ps1', 'ApexGrip-Stop.cmd', 'ApexGrip-Stop.vbs', 'Apex.vbs',
+               'SETUP.txt', 'README.md', 'THIRD-PARTY-NOTICES.md', 'tools/apex_doctor.ps1',
+               'tools/grip_watchdog.ps1', 'ApexOverlay.ps1', 'grip/apex_grip_server.py']
+    for rel in targets:
+        p = os.path.join(dst, rel.replace('/', os.sep))
+        if not os.path.isfile(p):
+            continue
+        t = open(p, encoding='utf-8', errors='replace').read()
+        t = t.replace('Apex.exe', LITE_EXE)
+        t = t.replace("pid_of('Apex')", "pid_of('%s')" % LITE_EXE)
+        t = t.replace('-Name Apex ', '-Name Apex-Lite ')
+        t = t.replace('Get-Process -Name Apex -', 'Get-Process -Name Apex-Lite -')
+        open(p, 'w', encoding='utf-8').write(t)
+    # the old binary must not linger next to the new one
+    old = os.path.join(dst, 'Apex.exe')
+    if os.path.isfile(old):
+        try:
+            os.remove(old)
+        except OSError:
+            print('warning: could not remove the old Apex.exe (still running?)')
+
+
 def patch_port(dst):
     files = ['ui/index.html', 'ApexGrip-Stop.cmd', 'ApexLauncher.ps1', 'SETUP.txt', 'README.md',
              'tools/apex_doctor.ps1', 'tools/grip_watchdog.ps1', 'grip/apex_grip_server.py']
@@ -519,7 +546,7 @@ def build_host(dst):
     if not os.path.isfile(CSC) or not os.path.isfile(HOST_SRC):
         print('warning: csc.exe or host source missing, leaving the original Apex.exe in place')
         return
-    exe = os.path.join(dst, 'Apex.exe')
+    exe = os.path.join(dst, 'Apex-Lite.exe')
     args = [CSC, '/nologo', '/target:winexe', '/platform:anycpu', '/optimize+',
             '/out:' + exe, '/win32icon:' + HOST_ICO,
             '/r:System.dll', '/r:System.Drawing.dll', '/r:System.Windows.Forms.dll',
@@ -606,6 +633,7 @@ def main():
     patch_banner(dst)
     patch_docs(dst)
     patch_names(dst)
+    patch_exe_name(dst)
     patch_port(dst)
     build_host(dst)
     r = subprocess.run([sys.executable, '-m', 'py_compile',
