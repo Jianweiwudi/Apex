@@ -3113,10 +3113,14 @@
       var mn=parseFloat(el.dataset.min), mx=parseFloat(el.dataset.max);
       return mn + p*(mx-mn);
     }
-    function down(e){ dragEl=el; if (el === aeroSl) gripDragging = true; el.classList.add("drag"); setSlider(el, at(e.clientX), true);
+    // The dot sits on the card the user is touching, so it has to react to the pointer, not to
+    // the backend echo that comes back a round-trip later. flash() re-arms its own timer, so
+    // holding the slider keeps the dot lit and releasing it fades out 240 ms later.
+    function poke(){ if (el === aeroSl) flash("aeroLive"); else if (el === powerSl) flash("powerLive"); }
+    function down(e){ dragEl=el; if (el === aeroSl) gripDragging = true; el.classList.add("drag"); setSlider(el, at(e.clientX), true); poke();
       try { el.focus({ preventScroll: true }); } catch(err){ try { el.focus(); } catch(err2){} }
       el.setPointerCapture && el.setPointerCapture(e.pointerId); }
-    function move(e){ if(dragEl!==el) return; setSlider(el, at(e.clientX), true); }
+    function move(e){ if(dragEl!==el) return; setSlider(el, at(e.clientX), true); poke(); }
     function up(e){ if(dragEl!==el) return; dragEl=null; if (el === aeroSl) gripDragging = false; el.classList.remove("drag"); }
     el.addEventListener("pointerdown", down);
     el.addEventListener("pointermove", move);
