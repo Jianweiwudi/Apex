@@ -273,6 +273,26 @@
   .banner .btn{margin-left:auto;flex:0 0 auto;align-self:center;min-height:0;padding:6px 12px;
     font-size:11.5px}
 
+  /* Lap card */
+  .lapBig{display:flex;align-items:baseline;gap:9px;margin:2px 0 6px}
+  .lapBig span{font-family:var(--font-num);font-size:30px;font-weight:600;letter-spacing:-.02em;
+    color:var(--tx);font-variant-numeric:tabular-nums}
+  .lapBig em{font-style:normal;font-size:10.5px;color:var(--tx3);letter-spacing:.04em}
+  .lapRows{display:flex;flex-direction:column;gap:3px;margin-bottom:7px}
+  .lapRow{display:flex;align-items:baseline;gap:8px;font-size:11.5px}
+  .lapRow b{font-weight:600;color:var(--tx3);flex:0 0 46px}
+  .lapRow span{font-family:var(--font-num);font-variant-numeric:tabular-nums;color:var(--tx2)}
+  .lapRow span.best{color:var(--grip)}
+  .lapRow em{font-style:normal;margin-left:auto;font-size:11px;font-variant-numeric:tabular-nums}
+  .lapRow em.up{color:var(--warn)}
+  .lapRow em.down{color:var(--grip)}
+  .lapSparkWrap{height:44px;margin:0 0 4px}
+  .lapSpark{width:100%;height:100%;display:block;overflow:visible}
+  .lapSpark g.bar line{stroke:color-mix(in srgb,var(--tx3) 45%,transparent);stroke-width:1}
+  .lapSpark g.bar.best line{stroke:var(--grip)}
+  .lapSpark g.bar.last line{stroke:var(--tx)}
+  .lapSpark polyline{transition:points .24s var(--ease)}
+
   /* ============================================================ cards */
   .grid{flex:1 1 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;
     min-height:0;overflow:auto;padding:1px 2px 2px;align-content:start;
@@ -1261,6 +1281,28 @@
         <p data-i18n="f.tyreNote">四輪同時鎖定。寫入的是冷胎基準值（遊戲每幀用它算出熱胎壓力），所以能穩定鎖住</p>
       </details></div>
 
+    <!-- Lap card. The overlay already reads AC's graphics page (iCurrentTime / iLastTime /
+         iBestTime), so the pace is available without touching the process from here. The current
+         lap is interpolated between polls - a 1 s poll plus local elapsed ticks reads as a live
+         timer without asking the overlay sixty times a second. -->
+    <div class="card lapCard" data-games="ac acc" style="--c:var(--grip)">
+      <div class="halo"></div>
+      <div class="chead">
+        <div class="cico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 7.4V12l3.1 1.9"></path></svg></div>
+        <div><h2 id="lapName" data-i18n="lap.name">圈速</h2><span>LAP · PACE</span></div>
+        <div class="live" id="lapLive"></div>
+      </div>
+      <div class="lapBig"><span id="lapCur">--:--.---</span><em data-i18n="lap.cur">當前圈</em></div>
+      <div class="lapRows">
+        <div class="lapRow"><b data-i18n="lap.last">上一圈</b><span id="lapLast">—</span></div>
+        <div class="lapRow"><b data-i18n="lap.best">最佳</b><span id="lapBest">—</span><em id="lapDelta"></em></div>
+      </div>
+      <div class="lapSparkWrap"><svg class="lapSpark" id="lapSpark" viewBox="0 0 240 44" preserveAspectRatio="none" aria-hidden="true">
+        <polyline id="lapSparkLine" fill="none" stroke="var(--grip)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" points=""></polyline>
+      </svg></div>
+      <p class="legalNote" data-i18n="lap.note">上一圈與最佳取自共享記憶體；折線是這次連線最近 10 圈。</p>
+    </div>
+
     <!-- Session + stint planner.
          The numbers here are the driver's, not the game's. Apex forwards the physics page only,
          so there is no session type, no sessionTimeLeft and no lap time to read. Everything is
@@ -1651,7 +1693,7 @@
       "btn.restore":"恢复原厂","hint.rescan":"重新扫描","hint.restore":"恢复原厂",
       "set.display":"显示","set.uiscale":"界面大小","set.text":"文字大小",
     "set.displayNote":"界面大小会连版面一起缩放；文字大小只改字号。两者可以并用。",
-    "perf.set":"画质","perf.note":"性能模式比游戏的最低画质再低一阶：整组阴影关闭、阴影距离归零、阴影分辨率降到 1 px。","perf.off":"开启性能模式","perf.on":"性能模式已开启 · 点击关闭","perf.hint":"写入 Scalability.ini（覆盖 [ShadowQuality@0]）与 Engine.ini，改前会备份；必须完全退出 ACC 再重新启动才生效。","perf.fail":"写入失败：{e}","perf.restart":"已写入。请完全退出 ACC（不是回主菜单）再重新启动。","perf.restored":"已还原。同样需要重启 ACC 才会生效。","perf.restartBtn":"应用并重启 ACC","perf.restarting":"正在重启 ACC…","perf.relaunching":"已重新启动 ACC，等它进入主菜单即可。","perf.confirmRestart":"会先正常关闭 ACC，等它结束后再自动重新启动；当前未存的赛段进度不会保留。要继续吗？",
+    "lap.name":"圈速","lap.cur":"当前圈","lap.last":"上一圈","lap.best":"最佳","lap.off":"未连到游戏","lap.note":"上一圈与最佳取自共享内存；折线是这次连接最近 10 圈。","perf.set":"画质","perf.note":"性能模式比游戏的最低画质再低一阶：整组阴影关闭、阴影距离归零、阴影分辨率降到 1 px。","perf.off":"开启性能模式","perf.on":"性能模式已开启 · 点击关闭","perf.hint":"写入 Scalability.ini（覆盖 [ShadowQuality@0]）与 Engine.ini，改前会备份；必须完全退出 ACC 再重新启动才生效。","perf.fail":"写入失败：{e}","perf.restart":"已写入。请完全退出 ACC（不是回主菜单）再重新启动。","perf.restored":"已还原。同样需要重启 ACC 才会生效。","perf.restartBtn":"应用并重启 ACC","perf.restarting":"正在重启 ACC…","perf.relaunching":"已重新启动 ACC，等它进入主菜单即可。","perf.confirmRestart":"会先正常关闭 ACC，等它结束后再自动重新启动；当前未存的赛段进度不会保留。要继续吗？",
     "perf.o.shadows":"阴影","perf.o.shadows.d":"车、建筑、树的影子整组关闭；效果最明显，画面也会变平。",
     "perf.o.volumetric":"体积雾","perf.o.volumetric.d":"远景的雾气与光束；关掉后远方变干净，省下不少填充率。",
     "perf.o.ssr":"屏幕空间反射","perf.o.ssr.d":"湿地、车漆、玻璃上的实时倒影；关掉后这些表面只剩环境光。",
@@ -1720,7 +1762,7 @@
       "btn.restore":"恢復原廠","hint.rescan":"重新掃描","hint.restore":"恢復原廠",
       "set.display":"顯示","set.uiscale":"介面大小","set.text":"文字大小",
     "set.displayNote":"介面大小會連版面一起縮放；文字大小只改字級。兩者可以並用。",
-    "perf.set":"畫質","perf.note":"效能模式比遊戲的最低畫質再低一階：整組陰影關閉、陰影距離歸零、陰影解析度降到 1 px。","perf.off":"開啟效能模式","perf.on":"效能模式已開啟 · 點擊關閉","perf.hint":"寫入 Scalability.ini（覆寫 [ShadowQuality@0]）與 Engine.ini，改前會備份；必須完全退出 ACC 再重新啟動才生效。","perf.fail":"寫入失敗：{e}","perf.restart":"已寫入。請完全退出 ACC（不是回主選單）再重新啟動。","perf.restored":"已還原。同樣需要重啟 ACC 才會生效。","perf.restartBtn":"套用並重啟 ACC","perf.restarting":"正在重啟 ACC…","perf.relaunching":"已重新啟動 ACC，等它進入主選單即可。","perf.confirmRestart":"會先正常關閉 ACC，等它結束後再自動重新啟動；目前未存的賽段進度不會保留。要繼續嗎？",
+    "lap.name":"圈速","lap.cur":"當前圈","lap.last":"上一圈","lap.best":"最佳","lap.off":"未連到遊戲","lap.note":"上一圈與最佳取自共享記憶體；折線是這次連線最近 10 圈。","perf.set":"畫質","perf.note":"效能模式比遊戲的最低畫質再低一階：整組陰影關閉、陰影距離歸零、陰影解析度降到 1 px。","perf.off":"開啟效能模式","perf.on":"效能模式已開啟 · 點擊關閉","perf.hint":"寫入 Scalability.ini（覆寫 [ShadowQuality@0]）與 Engine.ini，改前會備份；必須完全退出 ACC 再重新啟動才生效。","perf.fail":"寫入失敗：{e}","perf.restart":"已寫入。請完全退出 ACC（不是回主選單）再重新啟動。","perf.restored":"已還原。同樣需要重啟 ACC 才會生效。","perf.restartBtn":"套用並重啟 ACC","perf.restarting":"正在重啟 ACC…","perf.relaunching":"已重新啟動 ACC，等它進入主選單即可。","perf.confirmRestart":"會先正常關閉 ACC，等它結束後再自動重新啟動；目前未存的賽段進度不會保留。要繼續嗎？",
     "perf.o.shadows":"陰影","perf.o.shadows.d":"車、建築、樹的影子整組關閉；效果最明顯，畫面也會變平。",
     "perf.o.volumetric":"體積霧","perf.o.volumetric.d":"遠景的霧氣與光束；關掉後遠方變乾淨，省下不少填充率。",
     "perf.o.ssr":"螢幕空間反射","perf.o.ssr.d":"濕地、車漆、玻璃上的即時倒影；關掉後這些表面只剩環境光。",
@@ -1789,7 +1831,7 @@
       "btn.restore":"Restore stock","hint.rescan":"Rescan","hint.restore":"Restore",
       "set.display":"Display","set.uiscale":"Interface size","set.text":"Text size",
     "set.displayNote":"Interface size zooms layout and type together; Text size changes type only. They combine.",
-    "perf.set":"Graphics","perf.note":"Performance mode goes one step below the game's lowest preset: shadows off entirely, shadow distance zero, shadow maps down to 1 px.","perf.off":"Enable performance mode","perf.on":"Performance mode is on · click to disable","perf.hint":"Writes Scalability.ini (overriding [ShadowQuality@0]) and Engine.ini, backing both up; ACC must be fully quit and relaunched.","perf.fail":"Write failed: {e}","perf.restart":"Written. Quit ACC completely (not just to the menu) and relaunch.","perf.restored":"Reverted. Restart ACC to apply.","perf.restartBtn":"Apply and restart ACC","perf.restarting":"Restarting ACC…","perf.relaunching":"ACC is launching again — wait for the main menu.","perf.confirmRestart":"ACC will be closed gracefully and relaunched automatically; unsaved session progress is lost. Continue?",
+    "lap.name":"Lap times","lap.cur":"Current lap","lap.last":"Last lap","lap.best":"Best","lap.off":"No game","lap.note":"Last and best come from shared memory; the line is the last 10 laps of this session.","perf.set":"Graphics","perf.note":"Performance mode goes one step below the game's lowest preset: shadows off entirely, shadow distance zero, shadow maps down to 1 px.","perf.off":"Enable performance mode","perf.on":"Performance mode is on · click to disable","perf.hint":"Writes Scalability.ini (overriding [ShadowQuality@0]) and Engine.ini, backing both up; ACC must be fully quit and relaunched.","perf.fail":"Write failed: {e}","perf.restart":"Written. Quit ACC completely (not just to the menu) and relaunch.","perf.restored":"Reverted. Restart ACC to apply.","perf.restartBtn":"Apply and restart ACC","perf.restarting":"Restarting ACC…","perf.relaunching":"ACC is launching again — wait for the main menu.","perf.confirmRestart":"ACC will be closed gracefully and relaunched automatically; unsaved session progress is lost. Continue?",
     "perf.o.shadows":"Shadows","perf.o.shadows.d":"Cars, buildings, trees — the whole shadow pass. Biggest win, flattest look.",
     "perf.o.volumetric":"Volumetric fog","perf.o.volumetric.d":"Distant haze and light shafts; turning it off cleans up the horizon and saves fill rate.",
     "perf.o.ssr":"Screen-space reflections","perf.o.ssr.d":"Live reflections on wet tarmac, paint and glass; off leaves ambient light only.",
@@ -4412,6 +4454,81 @@
      ACC's own ScalabilityGroups bottom out at sg.ShadowQuality=0 and still draw shadows.
      Apex writes a marked block into Engine.ini that turns them off entirely (quality 0,
      distance 0, 1 px shadow maps) and removes it again on the way back. */
+  /* ---------------- lap card ----------------
+     Reads the overlay's /state (AC shared memory): cur / last / best, in seconds. The current
+     lap is anchored at the last poll and advanced locally, so the timer moves every frame while
+     the network round-trip stays at 1 Hz. */
+  var LAP = { anchor: 0, cur: 0, last: 0, best: 0, hist: [], timer: null };
+  function lapFmt(s){
+    if (!s || s <= 0) return "--:--.---";
+    var m = Math.floor(s / 60), r = s - m * 60;
+    return m + ":" + (r < 10 ? "0" : "") + r.toFixed(3);
+  }
+  function lapFmtShort(s){ return s > 0 ? lapFmt(s) : "—"; }
+  function lapRender(){
+    var cur = document.getElementById("lapCur"),
+        last = document.getElementById("lapLast"),
+        best = document.getElementById("lapBest"),
+        delta = document.getElementById("lapDelta"),
+        live = document.getElementById("lapLive");
+    if (!cur) return;
+    var now = (LAP.cur > 0 && LAP.anchor) ? LAP.cur + (performance.now() - LAP.anchor) / 1000 : 0;
+    cur.textContent = lapFmt(now);
+    last.textContent = lapFmtShort(LAP.last);
+    best.textContent = lapFmtShort(LAP.best);
+    if (LAP.last > 0 && LAP.best > 0){
+      var d = LAP.last - LAP.best;
+      delta.textContent = (d >= 0 ? "+" : "−") + Math.abs(d).toFixed(3);
+      delta.className = d > 0.0005 ? "up" : (d < -0.0005 ? "down" : "");
+    } else { delta.textContent = ""; delta.className = ""; }
+    if (live) live.textContent = LAP.cur > 0 ? "" : t("lap.off");
+    var line = document.getElementById("lapSparkLine");
+    if (line){
+      var h = LAP.hist;
+      if (h.length < 2) line.setAttribute("points", "");
+      else {
+        var mn = Math.min.apply(null, h), mx = Math.max.apply(null, h), span = Math.max(0.001, mx - mn);
+        var pts = h.map(function(v, i){
+          var x = (i / (h.length - 1)) * 240;
+          var y = 40 - ((v - mn) / span) * 34 - 2;
+          return x.toFixed(1) + "," + y.toFixed(1);
+        }).join(" ");
+        line.setAttribute("points", pts);
+      }
+    }
+  }
+  function lapPoll(){
+    ovReq("state", function(j){
+      if (!j){ LAP.cur = 0; LAP.anchor = 0; lapRender(); return; }
+      var prevLast = LAP.last;
+      LAP.cur = j.cur || 0;
+      LAP.anchor = performance.now();
+      if (j.last > 0){
+        LAP.last = j.last;
+        if (prevLast && Math.abs(j.last - prevLast) > 0.05){
+          LAP.hist.push(j.last);
+          if (LAP.hist.length > 10) LAP.hist.shift();
+        } else if (!prevLast){
+          LAP.hist.push(j.last);
+        }
+      }
+      LAP.best = j.best || j.bestSaved || 0;
+      lapRender();
+    });
+  }
+  function lapStart(ms){
+    lapStop();
+    lapPoll();
+    LAP.timer = setInterval(lapPoll, ms || 1000);
+  }
+  function lapStop(){ if (LAP.timer){ clearInterval(LAP.timer); LAP.timer = null; } }
+  (function(){
+    var c = document.getElementById("lapCur");
+    if (!c) return;
+    (function tick(){ lapRender(); requestAnimationFrame(tick); })();   // local interpolation
+    lapStart(1000);
+  })();
+
   /* ---------------- settings panes ---------------- */
   var setPane = "ui";
   function setTabsLayout(){
