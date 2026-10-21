@@ -301,6 +301,7 @@
   .delta.up{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 30%,transparent)}
   .delta.down{color:var(--grip);border-color:color-mix(in srgb,var(--grip) 30%,transparent)}
   .lapSparkWrap{height:44px;margin:auto 0 4px}
+  .lapSparkWrap.empty{display:none}
   .lapSpark{width:100%;height:100%;display:block;overflow:visible}
   .lapSpark g.bar line{stroke:color-mix(in srgb,var(--tx3) 45%,transparent);stroke-width:1}
   .lapSpark g.bar.best line{stroke:var(--grip)}
@@ -4544,13 +4545,12 @@
     var line = document.getElementById("lapSparkLine");
     if (line){
       var h = LAP.hist;
+      var wrap0 = document.querySelector(".lapSparkWrap");
       if (h.length < 2){
         line.setAttribute("points", "");
-        var wrap0 = document.querySelector(".lapSparkWrap");
-        if (wrap0) wrap0.style.visibility = "hidden";
+        if (wrap0) wrap0.classList.add("empty");
       } else {
-        var wrap1 = document.querySelector(".lapSparkWrap");
-        if (wrap1) wrap1.style.visibility = "";
+        if (wrap0) wrap0.classList.remove("empty");
         var mn = Math.min.apply(null, h), mx = Math.max.apply(null, h), span = Math.max(0.001, mx - mn);
         var pts = h.map(function(v, i){
           var x = (i / (h.length - 1)) * 240;

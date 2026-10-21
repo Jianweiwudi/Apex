@@ -15,6 +15,9 @@ grip/grip_factor.txt
 tools/*.log
 tools/_test*
 
+# ---- WebView2 profile (Chromium cache, created next to the exe) ----
+*.WebView2/
+
 # ---- python ----
 __pycache__/
 *.pyc
