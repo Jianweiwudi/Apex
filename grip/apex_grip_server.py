@@ -1897,6 +1897,57 @@ def perf_set(tid, on):
     return dict(perf_status(), changed=True), 200
 
 
+ACC_APPID = '805550'
+
+
+def _acc_windows(pid):
+    """列出屬於 pid 的頂層視窗（用 WM_CLOSE 讓遊戲自己正常結束，不強殺）。"""
+    import ctypes
+    from ctypes import wintypes
+    user32 = ctypes.windll.user32
+    out = []
+
+    @ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+    def cb(hwnd, lparam):
+        p = wintypes.DWORD()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(p))
+        if p.value == pid:
+            out.append(hwnd)
+        return True
+
+    user32.EnumWindows(cb, 0)
+    return out
+
+
+def game_restart(dry=False):
+    """關掉 ACC 再重新啟動，讓新寫入的 ini 生效 —— 使用者不必自己退遊戲。"""
+    pid = game_pid()
+    launched = False
+    waited = 0.0
+    if pid:
+        if dry:
+            return {'ok': True, 'dry': True, 'pid': pid, 'would': 'close+relaunch'}
+        import ctypes
+        for h in _acc_windows(pid):
+            ctypes.windll.user32.PostMessageW(h, 0x0010, 0, 0)      # WM_CLOSE
+        while waited < 30.0 and game_pid():
+            time.sleep(0.5)
+            waited += 0.5
+        if game_pid():
+            return {'ok': False, 'error': 'still-running'}
+    else:
+        if dry:
+            return {'ok': True, 'dry': True, 'pid': 0, 'would': 'launch'}
+    try:
+        subprocess.Popen(['cmd.exe', '/c', 'start', '', 'steam://rungameid/' + ACC_APPID],
+                         creationflags=CREATE_NO_WINDOW, close_fds=True)
+        launched = True
+    except Exception as e:
+        return {'ok': False, 'error': 'launch-failed: %s' % e}
+    log('重啟 ACC（等 %.1fs）' % waited)
+    return {'ok': True, 'launched': launched, 'waited': waited}
+
+
 def movie_state(info):
     """体积就足够判定：原片 87 MB vs 载荷 ~20 MB，差四倍以上，不用每次去哈希。
 
@@ -2581,6 +2632,8 @@ class Handler(BaseHTTPRequestHandler):
             if u.path == '/movie/import':
                 obj, code = movie_import_begin()
                 return self._send(obj, code)
+            if u.path == '/game/restart':
+                return self._send(game_restart(dry=q.get('dry', ['0'])[0] == '1'))
             if u.path == '/perf':
                 if q.get('id'):
                     obj, code = perf_set(q.get('id', [''])[0],

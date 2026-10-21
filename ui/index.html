@@ -1350,6 +1350,7 @@
     <h3 id="setPerfH" data-i18n="perf.set">畫質</h3>
     <p class="legalNote" data-i18n="perf.note">效能模式比遊戲的最低畫質再低一階：除了遊戲內的畫質等級，還會覆寫 Scalability.ini 的 [ShadowQuality@0]，把整組陰影關掉、陰影距離歸零、陰影貼圖降到 1 px。</p>
     <div class="perfList" id="perfList"></div>
+    <button type="button" class="btn" id="perfRestart" data-i18n="perf.restartBtn">套用並重啟 ACC</button>
     <p class="legalNote" id="perfHint" data-i18n="perf.hint">寫入 Scalability.ini 與 Engine.ini，改前會備份；必須完全退出 ACC 再重新啟動才生效。</p>
   </div>
   <div class="grp">
@@ -1616,7 +1617,7 @@
       "btn.restore":"恢复原厂","hint.rescan":"重新扫描","hint.restore":"恢复原厂",
       "set.display":"显示","set.uiscale":"界面大小","set.text":"文字大小",
     "set.displayNote":"界面大小会连版面一起缩放；文字大小只改字号。两者可以并用。",
-    "perf.set":"画质","perf.note":"性能模式比游戏的最低画质再低一阶：整组阴影关闭、阴影距离归零、阴影分辨率降到 1 px。","perf.off":"开启性能模式","perf.on":"性能模式已开启 · 点击关闭","perf.hint":"写入 Scalability.ini（覆盖 [ShadowQuality@0]）与 Engine.ini，改前会备份；必须完全退出 ACC 再重新启动才生效。","perf.fail":"写入失败：{e}","perf.restart":"已写入。请完全退出 ACC（不是回主菜单）再重新启动。","perf.restored":"已还原。同样需要重启 ACC 才会生效。",
+    "perf.set":"画质","perf.note":"性能模式比游戏的最低画质再低一阶：整组阴影关闭、阴影距离归零、阴影分辨率降到 1 px。","perf.off":"开启性能模式","perf.on":"性能模式已开启 · 点击关闭","perf.hint":"写入 Scalability.ini（覆盖 [ShadowQuality@0]）与 Engine.ini，改前会备份；必须完全退出 ACC 再重新启动才生效。","perf.fail":"写入失败：{e}","perf.restart":"已写入。请完全退出 ACC（不是回主菜单）再重新启动。","perf.restored":"已还原。同样需要重启 ACC 才会生效。","perf.restartBtn":"应用并重启 ACC","perf.restarting":"正在重启 ACC…","perf.confirmRestart":"会先正常关闭 ACC，等它结束后再自动重新启动；当前未存的赛段进度不会保留。要继续吗？",
     "perf.o.shadows":"阴影","perf.o.shadows.d":"车、建筑、树的影子整组关闭；效果最明显，画面也会变平。",
     "perf.o.volumetric":"体积雾","perf.o.volumetric.d":"远景的雾气与光束；关掉后远方变干净，省下不少填充率。",
     "perf.o.ssr":"屏幕空间反射","perf.o.ssr.d":"湿地、车漆、玻璃上的实时倒影；关掉后这些表面只剩环境光。",
@@ -1685,7 +1686,7 @@
       "btn.restore":"恢復原廠","hint.rescan":"重新掃描","hint.restore":"恢復原廠",
       "set.display":"顯示","set.uiscale":"介面大小","set.text":"文字大小",
     "set.displayNote":"介面大小會連版面一起縮放；文字大小只改字級。兩者可以並用。",
-    "perf.set":"畫質","perf.note":"效能模式比遊戲的最低畫質再低一階：整組陰影關閉、陰影距離歸零、陰影解析度降到 1 px。","perf.off":"開啟效能模式","perf.on":"效能模式已開啟 · 點擊關閉","perf.hint":"寫入 Scalability.ini（覆寫 [ShadowQuality@0]）與 Engine.ini，改前會備份；必須完全退出 ACC 再重新啟動才生效。","perf.fail":"寫入失敗：{e}","perf.restart":"已寫入。請完全退出 ACC（不是回主選單）再重新啟動。","perf.restored":"已還原。同樣需要重啟 ACC 才會生效。",
+    "perf.set":"畫質","perf.note":"效能模式比遊戲的最低畫質再低一階：整組陰影關閉、陰影距離歸零、陰影解析度降到 1 px。","perf.off":"開啟效能模式","perf.on":"效能模式已開啟 · 點擊關閉","perf.hint":"寫入 Scalability.ini（覆寫 [ShadowQuality@0]）與 Engine.ini，改前會備份；必須完全退出 ACC 再重新啟動才生效。","perf.fail":"寫入失敗：{e}","perf.restart":"已寫入。請完全退出 ACC（不是回主選單）再重新啟動。","perf.restored":"已還原。同樣需要重啟 ACC 才會生效。","perf.restartBtn":"套用並重啟 ACC","perf.restarting":"正在重啟 ACC…","perf.confirmRestart":"會先正常關閉 ACC，等它結束後再自動重新啟動；目前未存的賽段進度不會保留。要繼續嗎？",
     "perf.o.shadows":"陰影","perf.o.shadows.d":"車、建築、樹的影子整組關閉；效果最明顯，畫面也會變平。",
     "perf.o.volumetric":"體積霧","perf.o.volumetric.d":"遠景的霧氣與光束；關掉後遠方變乾淨，省下不少填充率。",
     "perf.o.ssr":"螢幕空間反射","perf.o.ssr.d":"濕地、車漆、玻璃上的即時倒影；關掉後這些表面只剩環境光。",
@@ -1754,7 +1755,7 @@
       "btn.restore":"Restore stock","hint.rescan":"Rescan","hint.restore":"Restore",
       "set.display":"Display","set.uiscale":"Interface size","set.text":"Text size",
     "set.displayNote":"Interface size zooms layout and type together; Text size changes type only. They combine.",
-    "perf.set":"Graphics","perf.note":"Performance mode goes one step below the game's lowest preset: shadows off entirely, shadow distance zero, shadow maps down to 1 px.","perf.off":"Enable performance mode","perf.on":"Performance mode is on · click to disable","perf.hint":"Writes Scalability.ini (overriding [ShadowQuality@0]) and Engine.ini, backing both up; ACC must be fully quit and relaunched.","perf.fail":"Write failed: {e}","perf.restart":"Written. Quit ACC completely (not just to the menu) and relaunch.","perf.restored":"Reverted. Restart ACC to apply.",
+    "perf.set":"Graphics","perf.note":"Performance mode goes one step below the game's lowest preset: shadows off entirely, shadow distance zero, shadow maps down to 1 px.","perf.off":"Enable performance mode","perf.on":"Performance mode is on · click to disable","perf.hint":"Writes Scalability.ini (overriding [ShadowQuality@0]) and Engine.ini, backing both up; ACC must be fully quit and relaunched.","perf.fail":"Write failed: {e}","perf.restart":"Written. Quit ACC completely (not just to the menu) and relaunch.","perf.restored":"Reverted. Restart ACC to apply.","perf.restartBtn":"Apply and restart ACC","perf.restarting":"Restarting ACC…","perf.confirmRestart":"ACC will be closed gracefully and relaunched automatically; unsaved session progress is lost. Continue?",
     "perf.o.shadows":"Shadows","perf.o.shadows.d":"Cars, buildings, trees — the whole shadow pass. Biggest win, flattest look.",
     "perf.o.volumetric":"Volumetric fog","perf.o.volumetric.d":"Distant haze and light shafts; turning it off cleans up the horizon and saves fill rate.",
     "perf.o.ssr":"Screen-space reflections","perf.o.ssr.d":"Live reflections on wet tarmac, paint and glass; off leaves ambient light only.",
@@ -4422,6 +4423,20 @@
       })
       .catch(function(){ PERF.busy = false; perfRender(); });
   }
+  function accRestart(btn){
+    if (!window.confirm(t("perf.confirmRestart"))) return;
+    if (btn){ btn.disabled = true; btn.textContent = t("perf.restarting"); }
+    fetch(GRIP_API + "/game/restart", { cache: "no-store" })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if (btn){ btn.disabled = false; btn.textContent = t("perf.restartBtn"); }
+        if (!j || !j.ok) toast(t("perf.fail").replace("{e}", (j && j.error) || "?"));
+        else toast(t("perf.restarting"));
+      })
+      .catch(function(){ if (btn){ btn.disabled = false; btn.textContent = t("perf.restartBtn"); } });
+  }
+  var perfRestart0 = document.getElementById("perfRestart");
+  if (perfRestart0) perfRestart0.addEventListener("click", function(){ accRestart(perfRestart0); });
   var perfList0 = document.getElementById("perfList");
   if (perfList0) perfList0.addEventListener("click", function(e){
     var b = e.target.closest ? e.target.closest(".sw") : null;
