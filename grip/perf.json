@@ -1,11 +1,10 @@
 {
  "enabled": [
-  "volumetric",
   "ssr",
+  "shadows",
+  "volumetric",
   "bloom",
   "motionblur",
-  "ssao",
-  "aa",
-  "shadows"
+  "ssao"
  ]
 }

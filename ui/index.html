@@ -459,6 +459,21 @@
   #set .setHead .ico{margin-left:auto;width:32px;height:32px;flex:0 0 auto}
   /* Each group is a quiet card rather than another full-width divider: nine groups in
      one column read as a wall of controls, and a card boundary is easier to scan. */
+  /* Settings are split into four panes: the drawer is 380 px wide, and twelve stacked groups
+     turned into a long scroll where finding anything meant reading everything. */
+  #set .setTabs{position:sticky;top:0;z-index:3;display:grid;grid-template-columns:repeat(4,1fr);
+    gap:2px;margin:0 13px 6px;padding:2px;border-radius:11px;background:var(--track);
+    border:1px solid var(--line-2);transition:top .2s var(--ease)}
+  #set .setTabs button{position:relative;z-index:1;min-height:30px;padding:0 4px;border:none;
+    background:transparent;color:var(--tx3);font-size:12px;font-weight:600;border-radius:9px;
+    cursor:pointer;transition:color .18s var(--ease)}
+  #set .setTabs button.on{color:var(--tx)}
+  #set .setTabs .glider{position:absolute;top:2px;left:2px;height:calc(100% - 4px);border-radius:9px;
+    background:var(--card-a);border:1px solid var(--line-2);
+    box-shadow:0 2px 8px rgba(0,0,0,.18);
+    transition:transform .26s var(--ease),width .26s var(--ease)}
+  #set .pane{display:none}
+  #set .pane.on{display:block}
   #set .grp{display:flex;flex-direction:column;gap:8px;padding:12px 13px;
     border:1px solid var(--line);border-radius:12px;background:var(--surface)}
   #set .grp>h3{font-family:var(--font-num);font-size:10px;font-weight:600;letter-spacing:.12em;
@@ -1309,6 +1324,14 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6 6 18"></path></svg>
     </button>
   </header>
+  <div class="setTabs" id="setTabs" role="tablist" aria-label="設定分類">
+    <div class="glider" id="setTabsGlider"></div>
+    <button type="button" role="tab" data-pane="ui" aria-selected="true" class="on" data-i18n="set.tab.ui">介面</button>
+    <button type="button" role="tab" data-pane="game" aria-selected="false" tabindex="-1" data-i18n="set.tab.game">遊戲</button>
+    <button type="button" role="tab" data-pane="screen" aria-selected="false" tabindex="-1" data-i18n="set.tab.screen">畫面</button>
+    <button type="button" role="tab" data-pane="about" aria-selected="false" tabindex="-1" data-i18n="set.tab.about">關於</button>
+  </div>
+  <div class="pane on" data-pane="ui">
   <div class="grp">
     <h3 id="setLangH" data-i18n="set.lang">語言</h3>
     <div class="seg" id="segLang" role="radiogroup" aria-labelledby="setLangH"><div class="glider" style="left: 3px; width: 75px;"></div>
@@ -1351,19 +1374,14 @@
     <p class="legalNote" data-i18n="set.displayNote">介面大小會連版面一起縮放；文字大小只改字級。兩者可以並用。</p>
   </div>
   <div class="grp">
-    <h3 id="setPerfH" data-i18n="perf.set">畫質</h3>
-    <p class="legalNote" data-i18n="perf.note">效能模式比遊戲的最低畫質再低一階：除了遊戲內的畫質等級，還會覆寫 Scalability.ini 的 [ShadowQuality@0]，把整組陰影關掉、陰影距離歸零、陰影貼圖降到 1 px。</p>
-    <div class="perfList" id="perfList"></div>
-    <button type="button" class="btn" id="perfRestart" data-i18n="perf.restartBtn">套用並重啟 ACC</button>
-    <p class="legalNote" id="perfHint" data-i18n="perf.hint">寫入 Scalability.ini 與 Engine.ini，改前會備份；必須完全退出 ACC 再重新啟動才生效。</p>
-  </div>
-  <div class="grp">
     <h3 id="setSoundH" data-i18n="set.sound">提示音</h3>
     <div class="seg two" id="segSound" role="radiogroup" aria-labelledby="setSoundH"><div class="glider" style="left: 3px; width: 153px;"></div>
       <button role="radio" aria-checked="true" data-sound="on" data-i18n="set.on" tabindex="0" class="on">開啟</button>
       <button role="radio" aria-checked="false" data-sound="off" data-i18n="set.off" tabindex="-1" class="">關閉</button>
     </div>
   </div>
+  </div>
+  <div class="pane" data-pane="game">
   <div class="grp" id="flashSetGrp">
     <h3 id="setFlashH" data-i18n="flash.set">自動閃燈</h3>
     <p class="legalNote" data-i18n="flash.note">選擇前車距離或衝過終點線時觸發；距離可調 0.1–5 秒。設定保存在本機。</p>
@@ -1400,6 +1418,15 @@
     <h3 id="setSafeH" data-i18n="safe.set">安全鎖</h3>
     <p class="legalNote" data-i18n="safe.setNote">鎖定時，會寫入遊戲記憶體的五個項目（下壓力、引擎馬力、油量、胎壓、碰撞無車損）將被停用；其餘功能不受影響。解鎖需先閱讀並同意授權聲明。狀態保存在本機，重啟後依然有效。</p>
     <button type="button" class="btn wide" id="safeSetBtn">已解鎖 · 點擊鎖定</button>
+  </div>
+  </div>
+  <div class="pane" data-pane="screen">
+  <div class="grp">
+    <h3 id="setPerfH" data-i18n="perf.set">畫質</h3>
+    <p class="legalNote" data-i18n="perf.note">比遊戲的最低畫質再低一階：直接覆寫 Scalability.ini 的 [ShadowQuality@0] 等群組，逐項關掉陰影、體積霧、反射、泛光、動態模糊、環境光遮蔽、抗鋸齒。</p>
+    <div class="perfList" id="perfList"></div>
+    <button type="button" class="btn" id="perfRestart" data-i18n="perf.restartBtn">套用並重啟 ACC</button>
+    <p class="legalNote" id="perfHint" data-i18n="perf.hint">寫入 Scalability.ini 與 Engine.ini，改前會備份；必須完全退出 ACC 再重新啟動才生效。</p>
   </div>
   <div class="grp" id="ovGrp">
     <h3 id="setOvH" data-i18n="ov.h">遊戲內疊加層</h3>
@@ -1478,6 +1505,8 @@
     </details>
   </div>
 
+  </div>
+  <div class="pane" data-pane="about">
   <div class="grp">
     <h3 id="setLegalH" data-i18n="set.legalSrc">協議與來源</h3>
     <button type="button" class="btn legalBtn" id="legalOpen" aria-labelledby="setLegalH">
@@ -1489,6 +1518,7 @@
       <span class="verTag" id="srcCount">11</span>
     </button>
     <p class="legalNote" data-i18n="legal.note">本軟體不連網、不收集、不上傳任何資料；全部設定僅保存在本機。</p>
+  </div>
   </div>
 
 </div>
@@ -1629,7 +1659,7 @@
     "perf.o.motionblur":"动态模糊","perf.o.motionblur.d":"高速时边缘的拖影；关掉画面更锐利。",
     "perf.o.ssao":"环境光遮蔽","perf.o.ssao.d":"物件接触处的暗角；关掉后细节变平但更快。",
     "perf.o.aa":"抗锯齿","perf.o.aa.d":"边缘平滑；关掉帧数上升，但锯齿很明显。",
-    "set.lang":"语言","safe.set":"安全锁","safe.setNote":"锁定时，会写入游戏内存的五个项目（下压力、引擎马力、油量、胎压、碰撞无车损）将被停用；其余功能不受影响。解锁需先阅读并同意授权声明。状态保存在本机，重启后依然有效。","safe.locked":"已锁定 · 点击解锁","safe.open":"已解锁 · 点击锁定","safe.title":"高风险功能授权声明","safe.meta":"解锁前请阅读并同意","safe.body":"以下功能会直接写入游戏内存：下压力、引擎马力、油量、轮胎胎压与碰撞无车损（撞击不累积车损）。在线上对局、官方赛事或任何排行榜中使用这些修改，可能被判定为作弊，导致账号封禁、成绩作废或其他处罚。请仅在单机／离线环境中使用，并自行确认所在平台与赛事规则。使用即表示你已理解上述风险，全部后果由你本人承担，开发者不承担任何责任。","safe.agree":"我已阅读并理解上述声明，同意自行承担全部责任","safe.ok":"同意并解锁","safe.cancel":"取消","safe.resp":"责任自负 · 未勾选同意则保持锁定","safe.gateTitle":"已锁定","safe.gateNote":"此项会写入游戏内存。解锁需先同意授权声明。","safe.gateBtn":"解锁","safe.unlocked":"安全锁已解除，请注意：后果自负","safe.relocked":"安全锁已锁定，高风险功能已停用","safe.ariaLocked":"安全锁：已锁定，点击查看授权声明","safe.ariaOpen":"安全锁：已解锁，点击重新锁定","set.legal":"协议与条款","legal.title":"使用授权与免责声明","legal.close":"关闭","legal.note":"本软件不联网、不收集、不上传任何数据；全部设置仅保存在本机。","legal.missing":"条款文件未能载入，以下仅为摘要。使用前请先阅读完整条款。","disc.text":"**仅供离线单机使用。**严禁在 LFM、PITSKILL.IO、Hipole、TVRL、PXN Pers 联赛、FullPush 等任何官方赛事平台使用；一旦使用，后果自负。","disc.more":"查看条款","set.font":"字体大小","set.sys":"跟随系统","set.theme":"主题","set.auto":"自动","set.dark":"深色","set.light":"浅色",
+    "set.lang":"语言","set.tab.ui":"界面","set.tab.game":"游戏","set.tab.screen":"画面","set.tab.about":"关于","safe.set":"安全锁","safe.setNote":"锁定时，会写入游戏内存的五个项目（下压力、引擎马力、油量、胎压、碰撞无车损）将被停用；其余功能不受影响。解锁需先阅读并同意授权声明。状态保存在本机，重启后依然有效。","safe.locked":"已锁定 · 点击解锁","safe.open":"已解锁 · 点击锁定","safe.title":"高风险功能授权声明","safe.meta":"解锁前请阅读并同意","safe.body":"以下功能会直接写入游戏内存：下压力、引擎马力、油量、轮胎胎压与碰撞无车损（撞击不累积车损）。在线上对局、官方赛事或任何排行榜中使用这些修改，可能被判定为作弊，导致账号封禁、成绩作废或其他处罚。请仅在单机／离线环境中使用，并自行确认所在平台与赛事规则。使用即表示你已理解上述风险，全部后果由你本人承担，开发者不承担任何责任。","safe.agree":"我已阅读并理解上述声明，同意自行承担全部责任","safe.ok":"同意并解锁","safe.cancel":"取消","safe.resp":"责任自负 · 未勾选同意则保持锁定","safe.gateTitle":"已锁定","safe.gateNote":"此项会写入游戏内存。解锁需先同意授权声明。","safe.gateBtn":"解锁","safe.unlocked":"安全锁已解除，请注意：后果自负","safe.relocked":"安全锁已锁定，高风险功能已停用","safe.ariaLocked":"安全锁：已锁定，点击查看授权声明","safe.ariaOpen":"安全锁：已解锁，点击重新锁定","set.legal":"协议与条款","legal.title":"使用授权与免责声明","legal.close":"关闭","legal.note":"本软件不联网、不收集、不上传任何数据；全部设置仅保存在本机。","legal.missing":"条款文件未能载入，以下仅为摘要。使用前请先阅读完整条款。","disc.text":"**仅供离线单机使用。**严禁在 LFM、PITSKILL.IO、Hipole、TVRL、PXN Pers 联赛、FullPush 等任何官方赛事平台使用；一旦使用，后果自负。","disc.more":"查看条款","set.font":"字体大小","set.sys":"跟随系统","set.theme":"主题","set.auto":"自动","set.dark":"深色","set.light":"浅色",
       "set.sound":"提示音","set.on":"开启","set.off":"关闭",
       "aria.close":"关闭",
       "aria.settings":"设置","aria.rescan":"重新扫描","aria.fuelTg":"锁定油量","aria.tyreTg":"锁定胎压",
@@ -1698,7 +1728,7 @@
     "perf.o.motionblur":"動態模糊","perf.o.motionblur.d":"高速時邊緣的拖影；關掉畫面更銳利。",
     "perf.o.ssao":"環境光遮蔽","perf.o.ssao.d":"物件接觸處的暗角；關掉後細節變平但更快。",
     "perf.o.aa":"抗鋸齒","perf.o.aa.d":"邊緣平滑；關掉幀數上升，但鋸齒很明顯。",
-    "set.lang":"語言","safe.set":"安全鎖","safe.setNote":"鎖定時，會寫入遊戲記憶體的五個項目（下壓力、引擎馬力、油量、胎壓、碰撞無車損）將被停用；其餘功能不受影響。解鎖需先閱讀並同意授權聲明。狀態保存在本機，重啟後依然有效。","safe.locked":"已鎖定 · 點擊解鎖","safe.open":"已解鎖 · 點擊鎖定","safe.title":"高風險功能授權聲明","safe.meta":"解鎖前請閱讀並同意","safe.body":"以下功能會直接寫入遊戲記憶體：下壓力、引擎馬力、油量、輪胎胎壓與碰撞無車損（撞擊不累積車損）。在線上對局、官方賽事或任何排行榜中使用這些修改，可能被判定為作弊，導致帳號封鎖、成績作廢或其他處罰。請僅在單機／離線環境中使用，並自行確認所在平台與賽事規則。使用即表示你已理解上述風險，全部後果由你本人承擔，開發者不承擔任何責任。","safe.agree":"我已閱讀並理解上述聲明，同意自行承擔全部責任","safe.ok":"同意並解鎖","safe.cancel":"取消","safe.resp":"責任自負 · 未勾選同意則保持鎖定","safe.gateTitle":"已鎖定","safe.gateNote":"此項會寫入遊戲記憶體。解鎖需先同意授權聲明。","safe.gateBtn":"解鎖","safe.unlocked":"安全鎖已解除，請注意：後果自負","safe.relocked":"安全鎖已鎖定，高風險功能已停用","safe.ariaLocked":"安全鎖：已鎖定，點擊查看授權聲明","safe.ariaOpen":"安全鎖：已解鎖，點擊重新鎖定","set.legal":"協議與條款","legal.title":"使用授權與免責聲明","legal.close":"關閉","legal.note":"本軟體不連網、不收集、不上傳任何資料；全部設定僅保存在本機。","legal.missing":"條款文件未能載入，以下僅為摘要。使用前請先閱讀完整條款。","disc.text":"**僅供離線單機使用。**嚴禁在 LFM、PITSKILL.IO、Hipole、TVRL、PXN Pers 聯賽、FullPush 等任何官方賽事平台使用；一經使用，後果自負。","disc.more":"查看條款","set.font":"字體大小","set.sys":"跟隨系統","set.theme":"主題","set.auto":"自動","set.dark":"深色","set.light":"淺色",
+    "set.lang":"語言","set.tab.ui":"介面","set.tab.game":"遊戲","set.tab.screen":"畫面","set.tab.about":"關於","safe.set":"安全鎖","safe.setNote":"鎖定時，會寫入遊戲記憶體的五個項目（下壓力、引擎馬力、油量、胎壓、碰撞無車損）將被停用；其餘功能不受影響。解鎖需先閱讀並同意授權聲明。狀態保存在本機，重啟後依然有效。","safe.locked":"已鎖定 · 點擊解鎖","safe.open":"已解鎖 · 點擊鎖定","safe.title":"高風險功能授權聲明","safe.meta":"解鎖前請閱讀並同意","safe.body":"以下功能會直接寫入遊戲記憶體：下壓力、引擎馬力、油量、輪胎胎壓與碰撞無車損（撞擊不累積車損）。在線上對局、官方賽事或任何排行榜中使用這些修改，可能被判定為作弊，導致帳號封鎖、成績作廢或其他處罰。請僅在單機／離線環境中使用，並自行確認所在平台與賽事規則。使用即表示你已理解上述風險，全部後果由你本人承擔，開發者不承擔任何責任。","safe.agree":"我已閱讀並理解上述聲明，同意自行承擔全部責任","safe.ok":"同意並解鎖","safe.cancel":"取消","safe.resp":"責任自負 · 未勾選同意則保持鎖定","safe.gateTitle":"已鎖定","safe.gateNote":"此項會寫入遊戲記憶體。解鎖需先同意授權聲明。","safe.gateBtn":"解鎖","safe.unlocked":"安全鎖已解除，請注意：後果自負","safe.relocked":"安全鎖已鎖定，高風險功能已停用","safe.ariaLocked":"安全鎖：已鎖定，點擊查看授權聲明","safe.ariaOpen":"安全鎖：已解鎖，點擊重新鎖定","set.legal":"協議與條款","legal.title":"使用授權與免責聲明","legal.close":"關閉","legal.note":"本軟體不連網、不收集、不上傳任何資料；全部設定僅保存在本機。","legal.missing":"條款文件未能載入，以下僅為摘要。使用前請先閱讀完整條款。","disc.text":"**僅供離線單機使用。**嚴禁在 LFM、PITSKILL.IO、Hipole、TVRL、PXN Pers 聯賽、FullPush 等任何官方賽事平台使用；一經使用，後果自負。","disc.more":"查看條款","set.font":"字體大小","set.sys":"跟隨系統","set.theme":"主題","set.auto":"自動","set.dark":"深色","set.light":"淺色",
       "set.sound":"提示音","set.on":"開啟","set.off":"關閉",
       "aria.close":"關閉",
       "aria.settings":"設定","aria.rescan":"重新掃描","aria.fuelTg":"鎖定油量","aria.tyreTg":"鎖定胎壓",
@@ -1767,7 +1797,7 @@
     "perf.o.motionblur":"Motion blur","perf.o.motionblur.d":"Edge smear at speed; off gives a sharper image.",
     "perf.o.ssao":"Ambient occlusion","perf.o.ssao.d":"Contact darkening where objects meet; off is flatter but faster.",
     "perf.o.aa":"Anti-aliasing","perf.o.aa.d":"Edge smoothing; off raises frame rate but jaggies show.",
-    "set.lang":"Language","safe.set":"Safety lock","safe.setNote":"While it is on, the five items that write into the game's memory (downforce, engine power, fuel, tyre pressure, collision damage) are switched off; everything else keeps working. Unlocking asks you to read and accept the declaration first. The state is stored locally and survives a restart.","safe.locked":"Locked - tap to unlock","safe.open":"Unlocked - tap to lock","safe.title":"High-risk feature authorisation","safe.meta":"Read and accept before unlocking","safe.body":"The following features write directly into the game's memory: downforce, engine power, fuel, tyre pressure and collision damage immunity. Using them in an online race, an official event or on any leaderboard may be treated as cheating and can lead to a ban, invalidated results or other penalties. Use them in single player / offline sessions only, and check the rules of the platform or series you are on. By continuing you accept these risks: every consequence is yours, and the developer takes no responsibility.","safe.agree":"I have read and understood this and accept full responsibility","safe.ok":"Accept and unlock","safe.cancel":"Cancel","safe.resp":"Your responsibility - the lock stays on until you tick the box","safe.gateTitle":"Locked","safe.gateNote":"This writes into the game's memory. Unlocking needs the declaration accepted first.","safe.gateBtn":"Unlock","safe.unlocked":"Safety lock removed - the consequences are yours","safe.relocked":"Safety lock on - the high-risk features are off again","safe.ariaLocked":"Safety lock: locked, open the declaration","safe.ariaOpen":"Safety lock: unlocked, lock it again","set.legal":"Terms & policies","legal.title":"Terms of use & disclaimer","legal.close":"Close","legal.note":"Apex does not go online, collect or upload anything. All settings stay on this machine.","legal.missing":"The terms file could not be loaded. What follows is only a summary - read the full terms before use.","disc.text":"**Offline single-player use only.** Forbidden on any official competition platform - LFM, PITSKILL.IO, Hipole, TVRL, PXN Pers, FullPush and the like. Use them and you carry the consequences.","disc.more":"View terms","set.font":"Font size","set.sys":"System","set.theme":"Theme","set.auto":"Auto","set.dark":"Dark","set.light":"Light",
+    "set.lang":"Language","set.tab.ui":"Interface","set.tab.game":"Game","set.tab.screen":"Visuals","set.tab.about":"About","safe.set":"Safety lock","safe.setNote":"While it is on, the five items that write into the game's memory (downforce, engine power, fuel, tyre pressure, collision damage) are switched off; everything else keeps working. Unlocking asks you to read and accept the declaration first. The state is stored locally and survives a restart.","safe.locked":"Locked - tap to unlock","safe.open":"Unlocked - tap to lock","safe.title":"High-risk feature authorisation","safe.meta":"Read and accept before unlocking","safe.body":"The following features write directly into the game's memory: downforce, engine power, fuel, tyre pressure and collision damage immunity. Using them in an online race, an official event or on any leaderboard may be treated as cheating and can lead to a ban, invalidated results or other penalties. Use them in single player / offline sessions only, and check the rules of the platform or series you are on. By continuing you accept these risks: every consequence is yours, and the developer takes no responsibility.","safe.agree":"I have read and understood this and accept full responsibility","safe.ok":"Accept and unlock","safe.cancel":"Cancel","safe.resp":"Your responsibility - the lock stays on until you tick the box","safe.gateTitle":"Locked","safe.gateNote":"This writes into the game's memory. Unlocking needs the declaration accepted first.","safe.gateBtn":"Unlock","safe.unlocked":"Safety lock removed - the consequences are yours","safe.relocked":"Safety lock on - the high-risk features are off again","safe.ariaLocked":"Safety lock: locked, open the declaration","safe.ariaOpen":"Safety lock: unlocked, lock it again","set.legal":"Terms & policies","legal.title":"Terms of use & disclaimer","legal.close":"Close","legal.note":"Apex does not go online, collect or upload anything. All settings stay on this machine.","legal.missing":"The terms file could not be loaded. What follows is only a summary - read the full terms before use.","disc.text":"**Offline single-player use only.** Forbidden on any official competition platform - LFM, PITSKILL.IO, Hipole, TVRL, PXN Pers, FullPush and the like. Use them and you carry the consequences.","disc.more":"View terms","set.font":"Font size","set.sys":"System","set.theme":"Theme","set.auto":"Auto","set.dark":"Dark","set.light":"Light",
       "set.sound":"Sound","set.on":"On","set.off":"Off",
       "aria.close":"Close",
       "aria.settings":"Settings","aria.rescan":"Rescan","aria.fuelTg":"Lock fuel amount","aria.tyreTg":"Lock tyre pressure",
@@ -2099,6 +2129,7 @@
     applySafe();          // the lock button and its settings row build their own strings
     mvRender();           // same again for the startup-movie panel
     perfRender();         // the graphics switches build their labels at render time
+    setTabsLayout();      // tab labels change length with the language
   }
   function fontScale(){
     if (S.font === "75") return 0.75;
@@ -2187,6 +2218,7 @@
     }, function(){
       TEXT.scale = target; lastPainted = -1; paintText(target, list);
       relayoutGrid(); placeGliders();
+      setTabsLayout();          // the settings header is taller/shorter after a text resize
     });
   }
   function applyTextSize(instant){
@@ -3455,6 +3487,8 @@
     // paints its :focus-visible ring even when the sheet was opened with the mouse. The
     // container still gets announced (aria-labelledby) and Tab moves to the first control.
     try { setEl.focus({ preventScroll: true }); } catch(e){ setEl.focus(); }
+    setPaneShow(setPane);       // measure the tab glider now that the drawer is on screen
+    setTabsLayout();
     mvPoll(); mvArm(4000);      // only poll while the sheet is open
   }
   function closeSet(){
@@ -4378,6 +4412,39 @@
      ACC's own ScalabilityGroups bottom out at sg.ShadowQuality=0 and still draw shadows.
      Apex writes a marked block into Engine.ini that turns them off entirely (quality 0,
      distance 0, 1 px shadow maps) and removes it again on the way back. */
+  /* ---------------- settings panes ---------------- */
+  var setPane = "ui";
+  function setTabsLayout(){
+    var bar = document.getElementById("setTabs"), gl = document.getElementById("setTabsGlider");
+    if (!bar || !gl) return;
+    var btns = bar.querySelectorAll("button");
+    var cur = null;
+    for (var i = 0; i < btns.length; i++){
+      btns[i].classList.toggle("on", btns[i].getAttribute("data-pane") === setPane);
+      if (btns[i].getAttribute("data-pane") === setPane) cur = btns[i];
+    }
+    if (cur) gl.style.width = cur.offsetWidth + "px", gl.style.transform = "translateX(" + (cur.offsetLeft - 2) + "px)";
+    // pin the tab bar right below the sticky header; its height changes with the text size,
+    // so it is measured instead of hard-coded
+    var hd = document.querySelector("#set .setHead");
+    if (hd) bar.style.top = hd.offsetHeight + "px";
+  }
+  function setPaneShow(name){
+    setPane = name || "ui";
+    var panes = document.querySelectorAll("#set .pane");
+    for (var i = 0; i < panes.length; i++)
+      panes[i].classList.toggle("on", panes[i].getAttribute("data-pane") === setPane);
+    setTabsLayout();
+    var box = document.getElementById("set");
+    if (box && box.className === "on") box.scrollTop = 0;
+  }
+  var setTabsEl = document.getElementById("setTabs");
+  if (setTabsEl) setTabsEl.addEventListener("click", function(e){
+    var b = e.target.closest ? e.target.closest("button[data-pane]") : null;
+    if (b) setPaneShow(b.getAttribute("data-pane"));
+  });
+  window.addEventListener("resize", setTabsLayout);
+
   var PERF = { list: [], busy: false };
   function perfRender(){
     var box = document.getElementById("perfList");
