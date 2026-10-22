@@ -52,6 +52,11 @@ $L10N = @{
     'tray.proto' = '一键启动（注册 apexoverlay: 协议）'; 'tray.quit' = '退出'
     'msg.shortcut' = '桌面快捷方式已创建：'; 'msg.fail' = '创建失败：'
     'msg.hidden' = '叠加层已隐藏 · 托盘双击，或在 Apex 设置里点「显示叠加层」可恢复'
+    'g.accel' = '加速'; 'g.brake' = '刹车'; 'g.left' = '左'; 'g.right' = '右'
+    'g.mag' = '综合'; 'g.lat' = '横向'; 'g.lon' = '纵向'; 'g.use' = '使用率'; 'g.peak' = '峰值'
+    'tray.gsteer' = '摩擦圆转向输入：'
+    'g.steer.auto' = '自动'; 'g.steer.rad' = '弧度'; 'g.steer.norm' = '归一化'
+    'tray.gflip' = '摩擦圆翻转横轴'; 'tray.gflon' = '摩擦圆翻转纵轴'
   }
   hant = @{
     'total' = '合計'; 'unit.s' = 's'
@@ -68,6 +73,11 @@ $L10N = @{
     'tray.proto' = '一鍵啟動（註冊 apexoverlay: 協議）'; 'tray.quit' = '結束'
     'msg.shortcut' = '桌面捷徑已建立：'; 'msg.fail' = '建立失敗：'
     'msg.hidden' = '疊加層已隱藏 · 托盤雙擊，或在 Apex 設定裡點「顯示疊加層」可恢復'
+    'g.accel' = '加速'; 'g.brake' = '剎車'; 'g.left' = '左'; 'g.right' = '右'
+    'g.mag' = '綜合'; 'g.lat' = '橫向'; 'g.lon' = '縱向'; 'g.use' = '使用率'; 'g.peak' = '峰值'
+    'tray.gsteer' = '摩擦圓轉向輸入：'
+    'g.steer.auto' = '自動'; 'g.steer.rad' = '弧度'; 'g.steer.norm' = '歸一化'
+    'tray.gflip' = '摩擦圓翻轉橫軸'; 'tray.gflon' = '摩擦圓翻轉縱軸'
   }
   en = @{
     'total' = 'Total'; 'unit.s' = 's'
@@ -84,6 +94,11 @@ $L10N = @{
     'tray.proto' = 'One-click start (registers apexoverlay:)'; 'tray.quit' = 'Quit'
     'msg.shortcut' = 'Desktop shortcut created: '; 'msg.fail' = 'Could not create: '
     'msg.hidden' = 'Overlay hidden - double-click the tray icon, or use "Show overlay" in Apex'
+    'g.accel' = 'Accel'; 'g.brake' = 'Brake'; 'g.left' = 'L'; 'g.right' = 'R'
+    'g.mag' = 'Total'; 'g.lat' = 'Lateral'; 'g.lon' = 'Long.'; 'g.use' = 'Usage'; 'g.peak' = 'Peak'
+    'tray.gsteer' = 'Circle steering input: '
+    'g.steer.auto' = 'Auto'; 'g.steer.rad' = 'Radians'; 'g.steer.norm' = 'Normalised'
+    'tray.gflip' = 'Circle: flip lateral axis'; 'tray.gflon' = 'Circle: flip longitudinal axis'
   }
 }
 function T([string]$k) {
@@ -118,6 +133,13 @@ function New-State {
     pb = @{}       # "car|track" -> @{ a = 0-100 s; s = 100-200 s; t = total }
     fuel = @{}     # "car|track" -> @{ lpl = litres per lap }
     lapBest = @{}  # "car|track" -> best lap in ms, kept across sessions
+    # Friction circle. gPeak is a flat "car|track" -> peak combined g, so the circle keeps a
+    # stable scale when you come back to the same car and track tomorrow instead of starting
+    # at a guessed radius and creeping outwards over the first few corners.
+    gPeak = @{}
+    gSteerMode = 'auto'   # auto | rad | norm - see Update-All for how auto decides
+    gFlipLat = $false
+    gFlipLon = $false
   }
 }
 $State = New-State
@@ -153,6 +175,21 @@ if (Test-Path $StateFile) {
         }
       }
     }
+    # Same flat shape as lapBest, and the same guard: a number that is not a number would be
+    # cast to 0 by [double] and silently reset the circle scale, so only reals get through.
+    if ($j.gPeak) {
+      foreach ($p in $j.gPeak.PSObject.Properties) {
+        $v = $p.Value
+        if ($v -is [int] -or $v -is [long] -or $v -is [double] -or $v -is [decimal]) {
+          if ($v -gt 0.2 -and $v -le 3.2) { $State['gPeak'][$p.Name] = [double]$v }
+        }
+      }
+    }
+    if ($j.gSteerMode -eq 'rad' -or $j.gSteerMode -eq 'norm' -or $j.gSteerMode -eq 'auto') {
+      $State.gSteerMode = [string]$j.gSteerMode
+    }
+    if ($null -ne $j.gFlipLat) { $State.gFlipLat = [bool]$j.gFlipLat }
+    if ($null -ne $j.gFlipLon) { $State.gFlipLon = [bool]$j.gFlipLon }
   } catch { }
 }
 function Save-State {
@@ -254,6 +291,18 @@ function Read-Game {
     gear    = Read-I32 $p 16
     rpm     = Read-I32 $p 20
     speed   = Read-F32 $p 28
+    # Driver inputs, for the friction circle's "what you are asking for" marker. gas and brake
+    # are 0..1 pedal positions; steerAngle is the front-wheel angle and is either radians or a
+    # -1..1 normalised value depending on the title - the tray has a switch for that.
+    gas     = Read-F32 $p 4
+    brake   = Read-F32 $p 8
+    steer   = Read-F32 $p 24
+    # accG is the car's own accelerometer, already in g: 44 lateral, 48 vertical, 52
+    # longitudinal. Nothing is derived from it, so a wrong sign only mirrors the picture -
+    # which is what the two flip switches in the tray are for.
+    gLat    = Read-F32 $p 44
+    gVert   = Read-F32 $p 48
+    gLon    = Read-F32 $p 52
     # Physics page wheel block, same offsets as AC's SPageFilePhysics 1.7 - ACC keeps the head of
     # that layout intact. Read defensively: if a layout ever moves, the values land outside the
     # ranges checked below and the panel simply hides the tyre card instead of showing nonsense.
@@ -319,6 +368,119 @@ $script:data = $null
 $script:leftScale = if ($State.leftScale -eq 1) { 1 } else { 1000 }
 $script:leftLast = 0.0
 $script:leftT = 0.0
+
+# ---------------------------------------------------------------- friction circle state
+# Everything here is read from the physics page; nothing is written back to the game.
+$script:gTrailSpan = 2.4          # seconds of G history kept behind the dot
+$script:gTrail = New-Object System.Collections.ArrayList
+$script:gRadius = 1.60            # display radius in g, eased towards the peak
+$script:gPeak = 0.0               # peak combined g for this car and track
+$script:gPeakPt = @{ lat = 0.0; lon = 0.0 }
+$script:gNow = @{ lat = 0.0; lon = 0.0; mag = 0.0; use = 0.0 }
+$script:gIn = @{ x = 0.0; y = 0.0; ok = $false }
+$script:gAccMax = 1.20            # largest acceleration seen, g - scales the throttle axis
+$script:gBrkMax = 2.50            # largest braking seen, g - scales the brake axis
+$script:gSteerMax = 0.0           # largest |steerAngle| seen, for the auto input mode
+$script:gPeakSavedAt = 0.0
+# Wheelbase, only used to turn a steering angle into a lateral-g demand. Every GT3 and GT4 car
+# sits between 2.5 and 2.8 m, so one constant is within ~10% for the whole field; the number is
+# here rather than derived so it can be tuned without touching the maths.
+$script:gWheelbase = 2.70
+
+# A GT3 car brakes far harder than it accelerates (about 2.5 g against 1.2 g), so mapping both
+# pedals onto the same axis length would make every brake input look like it was already at the
+# limit. These two peaks are the reason the throttle and brake arms are not the same length.
+function Set-GKey([string]$key) {
+  $p = 0.0
+  try {
+    if ($State.gPeak -and $State.gPeak.ContainsKey($key)) { $p = [double]$State.gPeak[$key] }
+  } catch { }
+  if (-not ($p -gt 0.2)) { $p = 0.0 }
+  $script:gPeak = [math]::Min(3.2, $p)
+  $script:gPeakPt = @{ lat = 0.0; lon = 0.0 }
+  # Start at the remembered scale rather than easing up from a guess: the first corner of a
+  # session would otherwise rescale the whole circle while the driver is looking at it.
+  $script:gRadius = if ($script:gPeak -gt 0.2) {
+    [math]::Max(1.0, [math]::Min(3.2, $script:gPeak * 1.08))
+  } else { 1.60 }
+  $script:gTrail.Clear()
+  $script:gAccMax = 1.20
+  $script:gBrkMax = 2.50
+  $script:gSteerMax = 0.0
+  $script:gNow = @{ lat = 0.0; lon = 0.0; mag = 0.0; use = 0.0 }
+  $script:gIn = @{ x = 0.0; y = 0.0; ok = $false }
+}
+
+# ---------------------------------------------------------------- update
+function Update-GForce($d) {
+  $gl = [double]$d.gLat
+  $gn = [double]$d.gLon
+  if ([double]::IsNaN($gl) -or [double]::IsInfinity($gl)) { $gl = 0.0 }
+  if ([double]::IsNaN($gn) -or [double]::IsInfinity($gn)) { $gn = 0.0 }
+  if ($State.gFlipLat) { $gl = -$gl }
+  if ($State.gFlipLon) { $gn = -$gn }
+  $mag = [math]::Sqrt($gl * $gl + $gn * $gn)
+
+  # A collision or a teleport can report a nonsense spike. Keeping it out of the peak and the
+  # trail matters: one crash would otherwise rescale the circle for the rest of the session.
+  if ($mag -le 6.0) {
+    if ($mag -gt $script:gPeak + 0.01) {
+      $script:gPeak = [math]::Min(3.2, $mag)
+      $script:gPeakPt = @{ lat = $gl; lon = $gn }
+      # Saving on every improvement would hit the disk several times a second while the driver
+      # is exploring the limit; three seconds between writes is enough for a value that only
+      # needs to survive a restart.
+      if (($script:now - $script:gPeakSavedAt) -gt 3.0) {
+        $script:gPeakSavedAt = $script:now
+        $State.gPeak[$script:carKey] = [math]::Round($script:gPeak, 3)
+        Save-State
+      }
+    }
+    [void]$script:gTrail.Add(@{ lat = $gl; lon = $gn; t = $script:now })
+    while ($script:gTrail.Count -gt 0 -and ($script:now - $script:gTrail[0].t) -gt $script:gTrailSpan) {
+      $script:gTrail.RemoveAt(0)
+    }
+    if ($gn -gt $script:gAccMax) { $script:gAccMax = [math]::Min(3.0, $gn) }
+    if ((-$gn) -gt $script:gBrkMax) { $script:gBrkMax = [math]::Min(3.0, -$gn) }
+  }
+
+  # The radius eases instead of stepping: a jump would move every point of the trail at once,
+  # which reads as the HUD glitching rather than the scale changing. The 1.4 floor keeps a slow
+  # out-lap from shrinking the circle to nothing before the first fast corner is reached.
+  $target = [math]::Max(1.4, [math]::Min(3.2, $script:gPeak * 1.08))
+  $script:gRadius += ($target - $script:gRadius) * 0.06
+
+  $use = if ($script:gRadius -gt 0.1) { $mag / $script:gRadius } else { 0.0 }
+  $script:gNow = @{ lat = $gl; lon = $gn; mag = $mag; use = $use }
+
+  # ---- input marker: where the pedals and the wheel are asking the car to be
+  $sv = [double]$d.steer
+  if ([double]::IsNaN($sv) -or [double]::IsInfinity($sv)) { $sv = 0.0 }
+  if ([math]::Abs($sv) -gt $script:gSteerMax) { $script:gSteerMax = [math]::Abs($sv) }
+  # "auto" decides from what has actually been seen: a normalised input can reach 1, a radian
+  # value on a GT3 car tops out near 0.6, so anything past 1.05 proves it is normalised. Until
+  # then radians is the safe assumption - it is what AC's published layout documents.
+  $mode = $State.gSteerMode
+  if ($mode -ne 'rad' -and $mode -ne 'norm') {
+    $mode = if ($script:gSteerMax -gt 1.05) { 'norm' } else { 'rad' }
+  }
+  $delta = if ($mode -eq 'norm') { $sv * 0.55 } else { $sv }
+  $gas = [math]::Max(0.0, [math]::Min(1.0, [double]$d.gas))
+  $brk = [math]::Max(0.0, [math]::Min(1.0, [double]$d.brake))
+  $r0 = [math]::Max(0.5, $script:gRadius)
+  # Lateral demand is kinematic, not a straight mapping of the steering angle: a_lat = v^2 * d / L.
+  # Mapping the raw angle onto the circle is wrong at both ends - at 100 km/h a realistic 0.10 rad
+  # would read as 18% of the circle while the car is actually pulling 90% of it.
+  $vms = [math]::Max(0.0, [double]$d.speed / 3.6)
+  $demandLat = ($vms * $vms * $delta) / ($script:gWheelbase * 9.81)
+  $script:gIn = @{
+    x  = $demandLat / $r0
+    # Pedals are scaled by what the car has demonstrated in each direction, because braking
+    # authority is roughly twice the drive authority on a GT3 car.
+    y  = ($gas * $script:gAccMax - $brk * $script:gBrkMax) / $r0
+    ok = ([double]$d.speed -gt 4.0)
+  }
+}
 
 function Session-Name([int]$t) {
   if ($t -lt 0 -or $t -gt 6) { return (T 'sess.other') }
@@ -629,7 +791,9 @@ try {
 
 function Get-Layout {
   $k = $script:scale
-  @{ w = [int](252 * $k); h = [int](202 * $k); pad = [int](14 * $k) }
+  # 344 = the 202 the panel used before the friction circle, plus a 132 px circle band and its
+  # separator. The circle is the widest thing on the panel, so the height is what grew.
+  @{ w = [int](252 * $k); h = [int](344 * $k); pad = [int](14 * $k) }
 }
 
 # Every frame is composed into one ARGB bitmap and handed to the compositor. Text uses
@@ -810,6 +974,92 @@ function Get-Chrome([double]$k) {
   return $o
 }
 
+# The rings, the crosshair and the four axis labels never change while the size does not, so
+# they are composed once per scale into a transparent bitmap. Rebuilding a dozen arcs and four
+# strings on every frame is the difference between a 25 Hz fade that stays smooth and one that
+# visibly steps - the same reason Get-Chrome exists.
+$script:gBase = @{}
+function Get-GBase([double]$k) {
+  $key = '{0:0.###}' -f $k
+  if ($script:gBase.ContainsKey($key)) { return $script:gBase[$key] }
+  $r = 66 * $k
+  # Four pixels of slack around the circle so the 1.3 px rim is not clipped at the bitmap edge.
+  $side = [int][math]::Ceiling($r * 2) + 4
+  $bmp = New-Object Drawing.Bitmap $side, $side, ([Drawing.Imaging.PixelFormat]::Format32bppArgb)
+  $bg = [Drawing.Graphics]::FromImage($bmp)
+  $bg.SmoothingMode = 'AntiAlias'
+  $bg.TextRenderingHint = [Drawing.Text.TextRenderingHint]::AntiAliasGridFit
+  $bg.Clear([Drawing.Color]::FromArgb(0, 0, 0, 0))
+  $c = $side / 2.0
+
+  $fill = New-Object Drawing.SolidBrush ([Drawing.Color]::FromArgb(16, 246, 247, 249))
+  $bg.FillEllipse($fill, [single]($c - $r), [single]($c - $r), [single]($r * 2), [single]($r * 2))
+  $fill.Dispose()
+
+  foreach ($f in 0.25, 0.5, 0.75) {
+    $pen = [Drawing.Pen]::new([Drawing.Color]::FromArgb(28, 246, 247, 249), [single](1.0 * $k))
+    $rr = $r * $f
+    $bg.DrawEllipse($pen, [single]($c - $rr), [single]($c - $rr), [single]($rr * 2), [single]($rr * 2))
+    $pen.Dispose()
+  }
+  $penOut = [Drawing.Pen]::new([Drawing.Color]::FromArgb(84, 246, 247, 249), [single](1.3 * $k))
+  $bg.DrawEllipse($penOut, [single]($c - $r), [single]($c - $r), [single]($r * 2), [single]($r * 2))
+  $penOut.Dispose()
+
+  $penAx = [Drawing.Pen]::new([Drawing.Color]::FromArgb(24, 246, 247, 249), [single](1.0 * $k))
+  $bg.DrawLine($penAx, [single]($c - $r), [single]$c, [single]($c + $r), [single]$c)
+  $bg.DrawLine($penAx, [single]$c, [single]($c - $r), [single]$c, [single]($c + $r))
+  $penAx.Dispose()
+
+  $fLbl = F 'Segoe UI' (6.6 * $k) 'Regular'
+  $brLbl = New-Object Drawing.SolidBrush ([Drawing.Color]::FromArgb(118, 246, 247, 249))
+  # Only the vertical axis is labelled. "Left" and "right" used to sit on the horizontal axis
+  # and the dot - which spends most of a lap near that axis - was drawn straight through them.
+  # The direction reads off the dot's position anyway, and the readout spells out 横向 / 纵向.
+  Draw-Text $bg (T 'g.accel') $fLbl $brLbl ($c - 22 * $k) ($c - $r + 4 * $k) (44 * $k) (11 * $k) $sfC
+  Draw-Text $bg (T 'g.brake') $fLbl $brLbl ($c - 22 * $k) ($c + $r - 15 * $k) (44 * $k) (11 * $k) $sfC
+  $brLbl.Dispose()
+  $bg.Dispose()
+
+  $script:gBase[$key] = $bmp
+  return $bmp
+}
+
+# The trail is drawn as one line per pair of samples, each with its own alpha so it fades out
+# towards the back. Caching by alpha bucket and scale keeps that to a handful of pens instead
+# of one new Pen per segment per frame.
+$script:gTrailPens = @{}
+function Get-GTrailPen([int]$alpha, [double]$k) {
+  $b = [int][math]::Floor($alpha / 16)
+  if ($b -lt 0) { $b = 0 }
+  if ($b -gt 15) { $b = 15 }
+  $key = '{0}|{1:0.###}' -f $b, $k
+  if (-not $script:gTrailPens.ContainsKey($key)) {
+    $a = [math]::Min(255, 16 * $b + 8)
+    $p = [Drawing.Pen]::new([Drawing.Color]::FromArgb($a, 246, 247, 249), [single](1.6 * $k))
+    $p.StartCap = [Drawing.Drawing2D.LineCap]::Round
+    $p.EndCap = [Drawing.Drawing2D.LineCap]::Round
+    $p.LineJoin = [Drawing.Drawing2D.LineJoin]::Round
+    $script:gTrailPens[$key] = $p
+  }
+  return $script:gTrailPens[$key]
+}
+
+# Dashed link, hollow input ring, peak cross. Cached per scale for the same reason as above.
+$script:gPens = @{}
+function Get-GPens([double]$k) {
+  $key = '{0:0.###}' -f $k
+  if ($script:gPens.ContainsKey($key)) { return $script:gPens[$key] }
+  $link = [Drawing.Pen]::new([Drawing.Color]::FromArgb(105, 246, 247, 249), [single](1.1 * $k))
+  $link.DashStyle = [Drawing.Drawing2D.DashStyle]::Dash
+  $link.DashPattern = [single[]]@(2.2, 2.0)
+  $inp = [Drawing.Pen]::new([Drawing.Color]::FromArgb(215, 94, 164, 250), [single](1.5 * $k))
+  $pk = [Drawing.Pen]::new([Drawing.Color]::FromArgb(185, 250, 190, 60), [single](1.2 * $k))
+  $o = @{ link = $link; input = $inp; peak = $pk }
+  $script:gPens[$key] = $o
+  return $o
+}
+
 function Draw-Hud($g) {
   $L = Get-Layout
   $k = $script:scale
@@ -986,6 +1236,92 @@ function Draw-Hud($g) {
     Draw-Text $g $r.k $fRowKey $brDim ($pad + 10 * $k) $r.y ($w - $pad * 2 - 10 * $k) (16 * $k) $sfL
     Draw-Text $g $r.v $fRowVal $r.tone ($pad + 74 * $k) $r.y ($w - $pad * 2 - 74 * $k) (16 * $k) $sfR
   }
+
+  # ---- friction circle ---------------------------------------------------------------
+  # x is lateral g, y is longitudinal g, both straight off the car's accelerometer. The ring
+  # is the grip envelope scaled from the peak this car has actually produced on this track.
+  $g.DrawLine($penSep, $pad, (192 * $k), $w - $pad, (192 * $k))
+
+  $cr = 66 * $k
+  $ccx = $pad + $cr
+  $ccy = 264 * $k
+  $gbase = Get-GBase $k
+  $g.DrawImage($gbase, [single]($ccx - $gbase.Width / 2.0), [single]($ccy - $gbase.Height / 2.0))
+
+  $gr = [math]::Max(0.5, $script:gRadius)
+  $sx = $cr / $gr                      # g -> pixels
+  $lim = $gr * 1.02                    # a point is pinned here rather than drawn over the rim
+  $gpen = Get-GPens $k
+
+  # trail: one segment per sample, fading towards the back
+  $tn = $script:gTrail.Count
+  if ($tn -ge 2) {
+    $t0 = $script:gTrail[0]
+    $px = $ccx + [double]$t0.lat * $sx
+    $py = $ccy - [double]$t0.lon * $sx
+    for ($i = 1; $i -lt $tn; $i++) {
+      $pt = $script:gTrail[$i]
+      $pl = [double]$pt.lat; $po = [double]$pt.lon
+      $pm = [math]::Sqrt($pl * $pl + $po * $po)
+      if ($pm -gt $lim) { $f = $lim / $pm; $pl = $pl * $f; $po = $po * $f }
+      $tx = $ccx + $pl * $sx
+      $ty = $ccy - $po * $sx
+      $al = 34 + [int](150 * ($i / ($tn - 1.0)))
+      $g.DrawLine((Get-GTrailPen $al $k), [single]$px, [single]$py, [single]$tx, [single]$ty)
+      $px = $tx; $py = $ty
+    }
+  }
+
+  # peak of this car and track, so "how much is left" is answerable at a glance
+  if ($script:gPeak -gt 0.2 -and ($script:gPeakPt.lat -ne 0 -or $script:gPeakPt.lon -ne 0)) {
+    $pkl = [double]$script:gPeakPt.lat; $pko = [double]$script:gPeakPt.lon
+    $pkm = [math]::Sqrt($pkl * $pkl + $pko * $pko)
+    if ($pkm -gt $lim) { $f = $lim / $pkm; $pkl = $pkl * $f; $pko = $pko * $f }
+    $kx = $ccx + $pkl * $sx
+    $ky = $ccy - $pko * $sx
+    $g.DrawLine($gpen.peak, [single]($kx - 3.2 * $k), [single]$ky, [single]($kx + 3.2 * $k), [single]$ky)
+    $g.DrawLine($gpen.peak, [single]$kx, [single]($ky - 3.2 * $k), [single]$kx, [single]($ky + 3.2 * $k))
+  }
+
+  # where the car actually is
+  $alat = [double]$script:gNow.lat; $alon = [double]$script:gNow.lon
+  $am = [math]::Sqrt($alat * $alat + $alon * $alon)
+  if ($am -gt $lim) { $f = $lim / $am; $alat = $alat * $f; $alon = $alon * $f }
+  $ax = $ccx + $alat * $sx
+  $ay = $ccy - $alon * $sx
+  $use = [double]$script:gNow.use
+  $soft = if ($use -ge 0.88) { $brRedSoft } elseif ($use -ge 0.66) { $brAmberSoft } else { $brGreenSoft }
+  $dot = if ($use -ge 0.88) { $brRed } elseif ($use -ge 0.66) { $brAmber } else { $brGreen }
+  $g.FillEllipse($soft, [single]($ax - 7.5 * $k), [single]($ay - 7.5 * $k), [single](15 * $k), [single](15 * $k))
+  $g.FillEllipse($dot, [single]($ax - 3.2 * $k), [single]($ay - 3.2 * $k), [single](6.4 * $k), [single](6.4 * $k))
+
+  # where the pedals and the wheel are asking it to be - the gap between the two is the
+  # understeer / oversteer / wheelspin the driver is producing right now
+  if ($script:gIn.ok) {
+    $ix = $ccx + [math]::Max(-1.25, [math]::Min(1.25, [double]$script:gIn.x)) * $cr
+    $iy = $ccy - [math]::Max(-1.25, [math]::Min(1.25, [double]$script:gIn.y)) * $cr
+    $g.DrawLine($gpen.link, [single]$ax, [single]$ay, [single]$ix, [single]$iy)
+    $g.DrawEllipse($gpen.input, [single]($ix - 4.2 * $k), [single]($iy - 4.2 * $k), [single](8.4 * $k), [single](8.4 * $k))
+  }
+
+  # ---- readouts beside the circle
+  $rx = $pad + 2 * $cr + 8 * $k
+  $rw = ($w - $pad) - $rx
+  $fGK = F 'Segoe UI' (6.9 * $k) 'Regular'
+  $fGV = F 'Consolas' (8.6 * $k) 'Bold'
+  $gRows = @(
+    @{ k = (T 'g.mag');  v = ('{0:0.00} g' -f [double]$script:gNow.mag) },
+    @{ k = (T 'g.lat');  v = ('{0:+0.00;-0.00;0.00} g' -f [double]$script:gNow.lat) },
+    @{ k = (T 'g.lon');  v = ('{0:+0.00;-0.00;0.00} g' -f [double]$script:gNow.lon) },
+    @{ k = (T 'g.use');  v = ('{0:0}%' -f [math]::Max(0, [math]::Min(999, $use * 100))) },
+    @{ k = (T 'g.peak'); v = ('{0:0.00} g' -f [double]$script:gPeak) }
+  )
+  $gy = 202 * $k
+  foreach ($it in $gRows) {
+    Draw-Text $g $it.k $fGK $brFaint $rx $gy $rw (12 * $k) $sfL
+    Draw-Text $g $it.v $fGV $brTx $rx $gy $rw (12 * $k) $sfR
+    $gy += 25 * $k
+  }
 }
 
 function Show-Hud {
@@ -1116,6 +1452,17 @@ function State-Json {
     }
     $sb = Get-LapBest ("$($d.car)|$($d.track)")
     if ($sb -gt 0) { $o.bestSaved = [math]::Round($sb / 1000.0, 3) }
+    # Friction circle, so the Apex panel can mirror the numbers and a bug report can show what
+    # the overlay was actually reading.
+    $o.g = @{
+      lat    = [math]::Round($script:gNow.lat, 2)
+      lon    = [math]::Round($script:gNow.lon, 2)
+      mag    = [math]::Round($script:gNow.mag, 2)
+      use    = [math]::Round($script:gNow.use, 3)
+      peak   = [math]::Round($script:gPeak, 2)
+      radius = [math]::Round($script:gRadius, 2)
+      input  = $(if ($script:gIn.ok) { @{ x = [math]::Round($script:gIn.x, 2); y = [math]::Round($script:gIn.y, 2) } } else { $null })
+    }
   }
   return ($o | ConvertTo-Json -Compress)
 }
@@ -1187,6 +1534,16 @@ $miS = $menu.Items.Add((T 'tray.s'))
 $miM = $menu.Items.Add((T 'tray.m'))
 $miL = $menu.Items.Add((T 'tray.l'))
 $menu.Items.Add('-') | Out-Null
+# Friction circle. The two flips exist because AC's accG axes are not guaranteed to have the
+# same sign as the picture a driver expects, and the steering mode exists because steerAngle
+# is radians on some titles and a -1..1 input on others - both are one click to correct, which
+# is faster than a rebuild.
+$miGSteer = $menu.Items.Add('')
+$miGFlipLat = $menu.Items.Add((T 'tray.gflip'))
+$miGFlipLat.CheckOnClick = $true
+$miGFlipLon = $menu.Items.Add((T 'tray.gflon'))
+$miGFlipLon.CheckOnClick = $true
+$menu.Items.Add('-') | Out-Null
 $miShortcut = $menu.Items.Add((T 'tray.shortcut'))
 $menu.Items.Add('-') | Out-Null
 $miStartup = $menu.Items.Add((T 'tray.startup'))
@@ -1199,6 +1556,26 @@ $miLock.Add_Click({ Toggle-Lock })
 $miS.Add_Click({ Set-Size 's' })
 $miM.Add_Click({ Set-Size 'm' })
 $miL.Add_Click({ Set-Size 'l' })
+
+function Update-GMenu {
+  try {
+    $miGSteer.Text = (T 'tray.gsteer') + (T ('g.steer.' + $State.gSteerMode))
+    $miGFlipLat.Checked = [bool]$State.gFlipLat
+    $miGFlipLon.Checked = [bool]$State.gFlipLon
+  } catch { }
+}
+$miGSteer.Add_Click({
+  $State.gSteerMode = switch ($State.gSteerMode) { 'auto' { 'rad' } 'rad' { 'norm' } default { 'auto' } }
+  # Clear the observation so auto mode can re-detect from scratch rather than keep the peak
+  # that made it decide the first time.
+  $script:gSteerMax = 0.0
+  Save-State
+  Update-GMenu
+})
+$miGFlipLat.Add_Click({ $State.gFlipLat = [bool]$miGFlipLat.Checked; Save-State; Update-GMenu })
+$miGFlipLon.Add_Click({ $State.gFlipLon = [bool]$miGFlipLon.Checked; Save-State; Update-GMenu })
+Update-GMenu
+
 $miQuit.Add_Click({ $tray.Visible = $false; $form.Close() })
 
 # A web page cannot start a process, but it can navigate to a URI scheme the OS has
@@ -1369,6 +1746,9 @@ function Update-All {
         $script:lastLaps = $d.laps
         $script:lapStartFuel = $d.fuel
         $script:run = @{ active = $false; armed = $true; t0 = 0.0; t100 = 0.0; t200 = 0.0; stoppedAt = 0.0 }
+        # A different car or track is a different grip envelope, so the circle restarts from
+        # whatever peak was remembered for that combination.
+        Set-GKey $k
       }
 
       # Best lap, remembered per car and track. The game only publishes iBestTime for the
@@ -1427,6 +1807,10 @@ function Update-All {
         }
         if ($el -gt 60) { $script:run.active = $false }
       }
+
+      # Friction circle. Runs after the car key is settled above, because the peak it reads is
+      # stored per car and track.
+      Update-GForce $d
 
       # The HUD exists only while there is a session to describe - no "waiting" box parked in
       # the corner of the desktop. The tray can force it open at any time.
@@ -1531,6 +1915,20 @@ if ($Shot) {
     }
     $script:lpl = 3.5
     $script:run = @{ active = $false; armed = $true; t0 = 0.0; t100 = 3.42; t200 = 9.29; stoppedAt = 0.0 }
+    # A synthetic corner, so the friction circle has something to show: the trail sweeps from
+    # braking into a long right-hander and the input marker sits outside the actual dot, which
+    # is what an understeering car looks like.
+    $script:gPeak = 2.15
+    $script:gRadius = 2.32
+    $script:gPeakPt = @{ lat = 1.72; lon = -1.28 }
+    $script:gTrail.Clear()
+    for ($i = 0; $i -lt 24; $i++) {
+      $a = -0.60 + 0.078 * $i
+      $mag = 1.10 + 0.66 * [math]::Sin(($i / 23.0) * [math]::PI)
+      [void]$script:gTrail.Add(@{ lat = [math]::Cos($a) * $mag; lon = [math]::Sin($a) * $mag; t = $i * 0.1 })
+    }
+    $script:gNow = @{ lat = 1.46; lon = -0.34; mag = 1.50; use = 0.65 }
+    $script:gIn = @{ x = 0.92; y = -0.18; ok = $true }
   } else {
     $script:data = Read-Game
   }
